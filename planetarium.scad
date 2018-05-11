@@ -30,7 +30,30 @@ module discSegment (armRadius) {
         translate([0,0, (segmentHeight / 2) + wallThickness])
         cube([baseRadius * 2 + 2, armWidth + 1, segmentHeight], center = true);
     }
+
+    //Arm gradle
+    difference() {
+        translate([0, -(wallThickness + 1), armRadius + wallThickness + 3]){
+            rotate([90, 0, 0]) {
+                difference() {
+                    cylinder(r = armRadius * 2, h = wallThickness * 2);
+                    translate([0,0,-1]) cylinder(r = armRadius + 1, h = wallThickness * 2 + 2);
+                }
+            }
+        }
+        union() {
+            translate([0, 0, (armRadius * 3 + segmentHeight)])
+            cube([armRadius * 6, armRadius * 6, armRadius * 6], center = true);
+            translate([0, 0, -(armRadius * 3)])
+            cube([armRadius * 6, armRadius * 6, armRadius * 6], center = true);
+            translate([(armRadius * 3 + baseRadius - 4), 0, 0])
+            cube([armRadius * 6, armRadius * 6, armRadius * 6], center = true);
+            translate([-(armRadius * 3 + baseRadius - 4), 0, 0])
+            cube([armRadius * 6, armRadius * 6, armRadius * 6], center = true);
+        }
+    }
     
+    //Arm
     translate([0, armWidth / 2, armRadius + wallThickness + 3]) {
         rotate([90,45,0]) {
             difference() {
