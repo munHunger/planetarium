@@ -1,8 +1,9 @@
 include <gear.scad>;
 $fn = 128;
 
-tolerance = 1;
-
+tolerance = 0.25;
+//radius
+wireThickness = 0.75;
 gearPitch = 200;
 
 //M4x10
@@ -26,26 +27,43 @@ driveGearRadius = 15;
 
 topSegmentHeight = 10;
 
-%translate([0,0, segmentHeight]) rotate([0,0,0]) discSegment(120);
+grooveDepth = 0.5;
+grooveHeight = 3;
+
 discSegment(170);
-%nonPrinted();
-%translate([0,0,segmentHeight * 2 + topSegmentHeight]) base();
+translate([0,0,segmentHeight])
+%internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
+//%translate([0,0, segmentHeight]) rotate([0,0,0]) discSegment(120);
+//%nonPrinted();
+//%translate([0,0,segmentHeight * 2 + topSegmentHeight]) base();
 
-%translate([0,0,topSegmentHeight + segmentHeight * 2]) rotate([180, 0, 0]) topStopper();
-
-arduino();
+//%translate([0,0,topSegmentHeight + segmentHeight * 2]) rotate([180, 0, 0]) topStopper();
 
 module arduino() {
-    translate([0,0,1])
-    cube([43,18,2], center = true);
-    translate([0,7.5,-4.5])
-    cube([38, 2.5,9], center = true);
-    translate([0,-7.5,-4.5])
-    cube([38, 2.5,9], center = true);
-    translate([43/2-2.5,0,5.5])
-    cube([5,7,9], center = true);
-    translate([-43/2+2.5,0,4])
-    cube([9,8,4], center = true);
+    //Model
+    translate([0,0,11])
+    rotate([0,180,0])
+    union() {
+        translate([0,0,1])
+        cube([43,18,2], center = true);
+        translate([0,7.5,-4.5])
+        cube([38, 2.5,9], center = true);
+        translate([0,-7.5,-4.5])
+        cube([38, 2.5,9], center = true);
+        translate([43/2-2.5,0,6.5])
+        cube([5,7,9], center = true);
+        translate([-43/2+2.5,0,4])
+        cube([9,8,4], center = true);
+    }
+    //Holder
+    union() {
+        translate([0,9 + tolerance/2 + wallThickness/2,9.5])
+        cube([43,wallThickness, 19], center = true);
+        translate([0,-9 - tolerance/2 - wallThickness/2,9.5])
+        cube([43,wallThickness, 19], center = true);
+        translate([-1,0,4.5])
+        cube([30, 18 + tolerance + 0.1, 9], center = true);
+    }
 }
 
 module topStopper() {
@@ -63,6 +81,15 @@ module tube(innerRadius, outerRadius, height) {
     }
 }
 
+// https://www.kjell.com/se/sortiment/el-verktyg/elektronik/elektromekanik/strombrytare/mikrobrytare/mikrobrytare-extra-liten-p36054
+module switch() {
+    translate([-3.25,-6.4,0])
+    rotate([0,0,15])
+    translate([0,6.4,0])
+    cube([0.5, 12.8, 5.8], center = true);
+    cube([6.5, 12.8, 5.8], center = true);
+}
+
 module discSegment (armRadius) {
     gapWidth = rodRadius + tolerance;
     //Base
@@ -78,9 +105,11 @@ module discSegment (armRadius) {
                         }
                         translate([0,0, -wallThickness]) cylinder(r = ballbearingRadius, h = wallThickness * 3);
                     }
-                    translate([0,0, (segmentHeight / 2) / 2 + wallThickness*2.5])
-                    cube([baseRadius * 2 + 2, armWidth + (tolerance * 2), segmentHeight/2], center = true);
-                    
+                    translate([0, (armWidth + tolerance) / 2, armRadius + wallThickness * 2 + 3]) {
+                        rotate([90,0,0]) {
+                            tube(armRadius - wallThickness - tolerance/2 - 8, armRadius + tolerance/2, armWidth + tolerance);
+                        }
+                    }
                 }
             
                 //Arm gradle
@@ -88,9 +117,29 @@ module discSegment (armRadius) {
                     armGradle(gapWidth, armRadius);
                     mirror([0,1,0])
                     armGradle(gapWidth, armRadius);
-                    translate([0,-(armWidth/2) - 1, (wallThickness * 2) + 7.4])
-                    rotate([90,0,0])
-                    stepperMount();
+                    translate([0,-(armWidth/2) - 26, wallThickness + 14 + wallThickness + tolerance / 2])
+                    rotate([-90,-90,0])
+                    union() {
+                        stepper28BYJ48();
+                        translate([0,0,32])
+                        rotate([180, 0, 0])
+                        difference() {
+                            gear (circular_pitch=gearPitch,
+                                gear_thickness = wallThickness,
+                                rim_thickness = wallThickness,
+                                hub_thickness = 6,
+                                bore_diameter = 0,
+                                circles=8,
+                                number_of_teeth=10);
+                            
+                            translate([0,0,-0.1])
+                            intersection() {
+                                cylinder(r = 2.5, h = 8.5);
+                                translate([0,0, 4])
+                                cube([3, 10, 8], center = true);
+                            }
+                        }
+                    }
                 }
             }
             translate([0,0,-1])
@@ -100,11 +149,95 @@ module discSegment (armRadius) {
         translate([0,0,wallThickness])
             tube(ballbearingRadius, baseRadius - wallThickness + 0.01, wallThickness);
         internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
-
+        
+        //Disc connector
+        translate([0,0,-grooveHeight * 7])
+        union() {
+            difference() {
+                tube(ballbearingRadius, ballbearingRadius+wallThickness, grooveHeight * 7);
+                for(i = [0:2]) {
+                    translate([0,0,i*grooveHeight*2+grooveHeight])
+                    tube(ballbearingRadius+wallThickness-grooveDepth, ballbearingRadius+wallThickness+grooveDepth, grooveHeight);
+                }
+                for(i = [0:2]) {
+                    rotate([0,0,i*(45/3)])
+                    translate([ballbearingRadius+wallThickness-grooveDepth-wireThickness,0,i*grooveHeight*2+grooveHeight])
+                    union() {
+                        cylinder(r = wireThickness, h = grooveHeight * 7);
+                        translate([0,0,wireThickness])
+                        rotate([0,90,0])
+                        cylinder(r = wireThickness, h = wireThickness*2);
+                    }
+                }
+            }
+            rotate([0,0,45])
+            for(i = [0:10]) {
+                rotate([0,0,i*(300/10)])
+                translate([ballbearingRadius+wallThickness/2,0,grooveHeight * 7])
+                sphere(r = wallThickness/3);
+            }
+        }
+        translate([0,0,segmentHeight-grooveHeight*7])
+        difference() {
+            tube(rodRadius+wallThickness+tolerance, rodRadius+wallThickness*2+tolerance, grooveHeight * 7);
+            for(i = [0:2]) {
+                translate([rodRadius+wallThickness,0,grooveHeight/2+i*grooveHeight*2+grooveHeight])
+                rotate([0,90,0])
+                cylinder(r = screwRadius, h = wallThickness * 2);
+                rotate([0,0,25])
+                translate([rodRadius+wallThickness*2,0,grooveHeight/2+i*grooveHeight*2+grooveHeight])
+                cube([wallThickness * 2, wireThickness*2, grooveHeight], center = true);
+                rotate([0,0,-25])
+                translate([rodRadius+wallThickness*2,0,grooveHeight/2+i*grooveHeight*2+grooveHeight])
+                cube([wallThickness * 2, wireThickness*2, grooveHeight], center = true);
+            }
+        }
+        
+        rotate([0,0,45])
+        translate([0,24+18+wallThickness+tolerance + armWidth/2,wallThickness*2-0.1 + 20])
+        rotate([0,90,-90])
+        arduino();
+        
+        rotate([0,0,-15])
+        translate([0,35,wallThickness*2])
+        rotate([0,0,-90])
+        union() {
+            cylinder(r = 14 + wallThickness + tolerance/2, h = 14.01);
+            translate([0,0,14])
+            union() {
+                stepper28BYJ48();
+                translate([0,0,32])
+                rotate([180, 0, 7.5])
+                difference() {
+                    gear (circular_pitch=gearPitch,
+                        gear_thickness = wallThickness,
+                        rim_thickness = wallThickness,
+                        hub_thickness = 6,
+                        bore_diameter = 0,
+                        circles=8,
+                        number_of_teeth=30);
+                    
+                    translate([0,0,-0.1])
+                    intersection() {
+                        cylinder(r = 2.5, h = 8.5);
+                        translate([0,0, 4])
+                        cube([3, 10, 8], center = true);
+                    }
+                }
+            }
+        }
     }
+    
+    translate([-rodRadius-tolerance*2,0, wallThickness*2 + 13])
+    rotate([-90,0,0])
+    switch();
+    mirror([1,0,0])
+    translate([-rodRadius-tolerance*2,0, wallThickness*2 + 13])
+    rotate([-90,0,0])
+    switch();
     //Arm
     translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
-        rotate([90,45,0]) {
+        rotate([90,63,0]) {
             difference() {
                 difference() {
                     union() {
@@ -122,6 +255,10 @@ module discSegment (armRadius) {
                     }
                     translate([-armRadius - 1, 0, -1]) 
                     cube([armRadius * 2 + 2, armRadius, armWidth + 2]);
+                    translate([0,0,1])
+                    tube(armRadius-grooveDepth, armRadius+grooveDepth, grooveHeight);
+                    translate([0,0,armWidth-1-grooveHeight])
+                    tube(armRadius-grooveDepth, armRadius+grooveDepth, grooveHeight);
                 }
                 
                 translate([0,0, -gapWidth + (rodRadius + 1) + (armWidth - (gapWidth * 2)) / 2])
@@ -173,6 +310,69 @@ module armGradle(gapWidth, armRadius) {
         }
         cube([baseRadius,baseRadius,segmentHeight], center = true);
     }
+}
+
+module stepper28BYJ48() {
+    translate([0,0,wallThickness + 0.1])
+    union() {
+        cylinder(r = 14, h = 19);
+        translate([0,0,19])
+        cylinder(r = 4.5, h = 1.5);
+        translate([0,0,20.5])
+        
+        intersection() {
+            cylinder(r = 2.5, h = 8.5);
+            union() {
+                translate([0,0, 3 + 1.49])
+                cube([3, 10, 6], center = true);
+                cylinder(r = 3, h = 1.5);
+            }
+        }
+        
+        difference() {
+            translate([0,0,17])
+            hull() {
+                translate([0,17.5,0])
+                cylinder(r = 3.5, h = 2);
+                translate([0,-17.5,0])
+                cylinder(r = 3.5, h = 2);
+            }
+
+            translate([0,17.5,0])
+            cylinder(r = 2.1, h = 20);
+            translate([0,-17.5,0])
+            cylinder(r = 2.1, h = 20);
+        }
+        translate([8.5,0,9.5])
+        cube([17,14.6,19], center = true);
+    }
+    
+    translate([0,0,wallThickness])
+    difference() {
+        union() {
+            difference() {
+                translate([0,0,8.5])
+                cube([28 + tolerance + wallThickness*2, 28 + tolerance + wallThickness*2, 17], center = true);
+                translate([0,-20,-0.1])
+                cube([40, 40, 19]);
+            }
+            translate([0,0,15])
+            hull() {
+                translate([0,17.5,0])
+                cylinder(r = 3.5, h = 2);
+                translate([0,-17.5,0])
+                cylinder(r = 3.5, h = 2);
+            }
+        }
+        translate([0,0,-0.1])
+        cylinder(r = 14 + tolerance/2, h = 19);
+
+        translate([0,17.5,-0.01])
+        cylinder(r = 2.1, h = 20);
+        translate([0,-17.5,-0.01])
+        cylinder(r = 2.1, h = 20);
+    }
+    cylinder(r = 14 + wallThickness + tolerance/2, h = wallThickness + 0.01);
 }
 
 //https://www.ebay.com/itm/Micro-Mini-15MM-Stepper-Motor-2-Phase-4-Wire-Stepping-Motor-Copper-metal-Gear/192035808614?hash=item2cb639e566:g:cGAAAOSwRbtaLkod
