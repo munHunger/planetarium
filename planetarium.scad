@@ -1,5 +1,5 @@
 include <gear.scad>;
-$fn = 128;
+$fn = 32;
 
 tolerance = 0.25;
 //radius
@@ -33,12 +33,13 @@ grooveHeight = 3;
 discSegment(170);
 translate([0,0,segmentHeight])
 %internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
-//%translate([0,0, segmentHeight]) rotate([0,0,0]) discSegment(120);
-//%nonPrinted();
-//%translate([0,0,segmentHeight * 2 + topSegmentHeight]) base();
+/*
+%translate([0,0, segmentHeight]) rotate([0,0,0]) discSegment(120);
+%nonPrinted();
+%translate([0,0,segmentHeight * 2 + topSegmentHeight]) base();
 
-//%translate([0,0,topSegmentHeight + segmentHeight * 2]) rotate([180, 0, 0]) topStopper();
-
+%translate([0,0,topSegmentHeight + segmentHeight * 2]) rotate([180, 0, 0]) topStopper();
+*/
 module arduino() {
     //Model
     translate([0,0,11])
@@ -238,36 +239,68 @@ module discSegment (armRadius) {
     //Arm
     translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
         rotate([90,63,0]) {
-            difference() {
-                difference() {
-                    union() {
-                        tube(armRadius - armThickness, armRadius, armWidth);
-                        intersection() {
-                            union() {
-                                translate([0,0,wallThickness])
-                                    internal_gear (circular_pitch = gearPitch, gear_thickness = armWidth/2-gapWidth-wallThickness-0.01, outer_radius = armRadius - armThickness);
-                                translate([0,0,armWidth/2 + gapWidth + 0.01])
-                                    internal_gear (circular_pitch = gearPitch, gear_thickness = armWidth/2-gapWidth-wallThickness-0.01, outer_radius = armRadius - armThickness);
-                            }
-                            rotate([0,0,-90-(grooveAngle/2)])
-                            pieSlice(armRadius+5, 0, grooveAngle, armWidth);
+            parts = 3;
+            section = 180/parts;
+            overlap = 10;
+            lower = true;
+            upper = true;
+            i = 0;
+            !intersection() {
+                arm(armRadius, gapWidth);
+                union() {
+                    pieSlice(armRadius, 180+section*i+overlap, 180+section*(i+1)-overlap, armWidth);
+                    intersection() {
+                        pieSlice(armRadius, 180+section*i-overlap, 180+section*(i+1)+overlap, armWidth);
+                        if(i % 2 == 1) {
+                            tube(armRadius-armThickness/2, armRadius, armWidth);
+                        }
+                        if(i % 2 == 0) {
+                            cylinder(r = armRadius-armThickness/2, h = armWidth);
                         }
                     }
-                    translate([-armRadius - 1, 0, -1]) 
-                    cube([armRadius * 2 + 2, armRadius, armWidth + 2]);
-                    translate([0,0,1])
-                    tube(armRadius-grooveDepth, armRadius+grooveDepth, grooveHeight);
-                    translate([0,0,armWidth-1-grooveHeight])
-                    tube(armRadius-grooveDepth, armRadius+grooveDepth, grooveHeight);
                 }
-                
-                translate([0,0, -gapWidth + (rodRadius + 1) + (armWidth - (gapWidth * 2)) / 2])
-                rotate([0,0,-90-(grooveAngle/2)])
-                pieSlice(armRadius+1, 0, grooveAngle, gapWidth * 2);
+                union() {
+                    if(lower)
+                        pieSlice(armRadius, 180+section*i-overlap, 180+section*(i+1)+overlap, armWidth/2+0.01);
+                    if(upper) {
+                        translate([0,0,armWidth/2])
+                        pieSlice(armRadius, 180+section*i-overlap, 180+section*(i+1)+overlap, armWidth/2+0.01);
+                    }
+                }
             }
         }
     }
     
+}
+
+module arm(armRadius, gapWidth) {
+    difference() {
+        difference() {
+            union() {
+                tube(armRadius - armThickness, armRadius, armWidth);
+                intersection() {
+                    union() {
+                        translate([0,0,wallThickness])
+                            internal_gear (circular_pitch = gearPitch, gear_thickness = armWidth/2-gapWidth-wallThickness-0.01, outer_radius = armRadius - armThickness);
+                        translate([0,0,armWidth/2 + gapWidth + 0.01])
+                            internal_gear (circular_pitch = gearPitch, gear_thickness = armWidth/2-gapWidth-wallThickness-0.01, outer_radius = armRadius - armThickness);
+                    }
+                    rotate([0,0,-90-(grooveAngle/2)])
+                    pieSlice(armRadius+5, 0, grooveAngle, armWidth);
+                }
+            }
+            translate([-armRadius - 1, 0, -1]) 
+            cube([armRadius * 2 + 2, armRadius, armWidth + 2]);
+            translate([0,0,1])
+            tube(armRadius-grooveDepth, armRadius+grooveDepth, grooveHeight);
+            translate([0,0,armWidth-1-grooveHeight])
+            tube(armRadius-grooveDepth, armRadius+grooveDepth, grooveHeight);
+        }
+        
+        translate([0,0, -gapWidth + (rodRadius + 1) + (armWidth - (gapWidth * 2)) / 2])
+        rotate([0,0,-90-(grooveAngle/2)])
+        pieSlice(armRadius+1, 0, grooveAngle, gapWidth * 2);
+    }
 }
 
 module pieSlice(r, start_angle, end_angle, height=10) {
