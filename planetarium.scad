@@ -95,6 +95,7 @@ module discSegment (armRadius) {
     gapWidth = rodRadius + tolerance;
     //Base
     union() {
+        color([0.9,0.9,0.9])
         difference() {
             union() {
                 difference() {
@@ -147,11 +148,15 @@ module discSegment (armRadius) {
             tube(baseRadius - wallThickness - ((driveGearRadius+tolerance) * 2), baseRadius - wallThickness + 0.01, wallThickness+2);
         }        
         
-        translate([0,0,wallThickness])
-            tube(ballbearingRadius, baseRadius - wallThickness + 0.01, wallThickness);
-        internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
+        color([0.2,0.6,0.9])
+        union() {
+            translate([0,0,wallThickness])
+                tube(ballbearingRadius, baseRadius - wallThickness + 0.01, wallThickness);
+            internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
+        }
         
         //Disc connector
+        /*
         translate([0,0,-grooveHeight * 7])
         union() {
             difference() {
@@ -193,12 +198,17 @@ module discSegment (armRadius) {
                 cube([wallThickness * 2, wireThickness*2, grooveHeight], center = true);
             }
         }
+        */
         
+        //Arduino
+        color([0.6,0.1,0.3])
         rotate([0,0,45])
         translate([0,24+18+wallThickness+tolerance + armWidth/2,wallThickness*2-0.1 + 20])
         rotate([0,90,-90])
         arduino();
         
+        //Top stepper motor
+        color([0.3,0.9,0.7])
         rotate([0,0,-15])
         translate([0,35,wallThickness*2])
         rotate([0,0,-90])
@@ -229,48 +239,62 @@ module discSegment (armRadius) {
         }
     }
     
-    translate([-rodRadius-tolerance*2,0, wallThickness*2 + 13])
-    rotate([-90,0,0])
-    switch();
-    mirror([1,0,0])
-    translate([-rodRadius-tolerance*2,0, wallThickness*2 + 13])
-    rotate([-90,0,0])
-    switch();
+    //Limit switches
+    color([1.0, 0.1, 0.7])
+    union() {
+        translate([-rodRadius-tolerance*2,0, wallThickness*2 + 13])
+        rotate([-90,0,0])
+        switch();
+        mirror([1,0,0])
+        translate([-rodRadius-tolerance*2,0, wallThickness*2 + 13])
+        rotate([-90,0,0])
+        switch();
+    }
+    
     //Arm
+    color([0.4,0.4,0.4])
     translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
         rotate([90,63,0]) {
-            parts = 3;
-            section = 180/parts;
-            overlap = 10;
-            lower = true;
-            upper = true;
-            i = 0;
-            !intersection() {
-                arm(armRadius, gapWidth);
-                union() {
-                    pieSlice(armRadius, 180+section*i+overlap, 180+section*(i+1)-overlap, armWidth);
-                    intersection() {
-                        pieSlice(armRadius, 180+section*i-overlap, 180+section*(i+1)+overlap, armWidth);
-                        if(i % 2 == 1) {
-                            tube(armRadius-armThickness/2, armRadius, armWidth);
-                        }
-                        if(i % 2 == 0) {
-                            cylinder(r = armRadius-armThickness/2, h = armWidth);
-                        }
-                    }
-                }
-                union() {
-                    if(lower)
-                        pieSlice(armRadius, 180+section*i-overlap, 180+section*(i+1)+overlap, armWidth/2+0.01);
-                    if(upper) {
-                        translate([0,0,armWidth/2])
-                        pieSlice(armRadius, 180+section*i-overlap, 180+section*(i+1)+overlap, armWidth/2+0.01);
-                    }
-                }
-            }
+            armPart(3, true, false, 1, armRadius, gapWidth);
+            armPart(3, false, true, 1, armRadius, gapWidth);
+        }
+    }
+    color([0.6,0.6,0.6])
+    translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
+        rotate([90,63,0]) {
+            armPart(3, true, true, 0, armRadius, gapWidth);
+            armPart(3, true, true, 2, armRadius, gapWidth);
         }
     }
     
+}
+
+module armPart(parts, showUpper, showLower, i, armRadius, gapWidth) {
+    section = 180/parts;
+    overlap = 10;
+    intersection() {
+        arm(armRadius, gapWidth);
+        union() {
+            pieSlice(armRadius, 180+section*i+overlap, 180+section*(i+1)-overlap, armWidth);
+            intersection() {
+                pieSlice(armRadius, 180+section*i-overlap, 180+section*(i+1)+overlap, armWidth);
+                if(i % 2 == 1) {
+                    tube(armRadius-armThickness/2, armRadius, armWidth);
+                }
+                if(i % 2 == 0) {
+                    cylinder(r = armRadius-armThickness/2, h = armWidth);
+                }
+            }
+        }
+        union() {
+            if(showLower)
+                pieSlice(armRadius, 180+section*i-overlap, 180+section*(i+1)+overlap, armWidth/2+0.01);
+            if(showUpper) {
+                translate([0,0,armWidth/2])
+                pieSlice(armRadius, 180+section*i-overlap, 180+section*(i+1)+overlap, armWidth/2+0.01);
+            }
+        }
+    }
 }
 
 module arm(armRadius, gapWidth) {
