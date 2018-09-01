@@ -5,7 +5,7 @@ wireThickness = 0.75;
 gearPitch = 200;
 
 //M4x10
-screwRadius = 2;
+screwRadius = 1.1;
 screwHeight = 10;
 
 baseRadius = 60;
@@ -29,9 +29,9 @@ grooveDepth = 0.5;
 grooveHeight = 3;
 gapWidth = rodRadius + tolerance;
 
-rotate([0,0,90])
-translate([0,0,wallThickness])
-%arm(170, gapWidth);
+//rotate([0,0,90])
+//translate([0,0,wallThickness])
+//%arm(170, gapWidth);
 clamp(170, gapWidth);
 
 module clamp(armRadius, gapWidth) {
@@ -41,7 +41,7 @@ module clamp(armRadius, gapWidth) {
             union() {
                 difference() {
                     //Base
-                    tube(armRadius-armThickness-wallThickness-gearThickness, armRadius-armThickness/2,armWidth+wallThickness*2);
+                    tube(armRadius-armThickness-wallThickness/2-gearThickness, armRadius-armThickness/2,armWidth+wallThickness*2);
                     //Width
                     translate([0,0,wallThickness+(armWidth-(tolerance+armWidth))/2])
                     tube(armRadius-armThickness, armRadius+1, tolerance+armWidth);
@@ -51,13 +51,18 @@ module clamp(armRadius, gapWidth) {
                 }
                 //Guide rail
                 translate([0,0,wallThickness+(armWidth-gapWidth*2)/2])
-                tube(armRadius-armThickness-wallThickness-gearThickness, armRadius-armThickness/2, gapWidth*2);
+                tube(armRadius-armThickness-wallThickness/2-gearThickness, armRadius-armThickness/2, gapWidth*2);
             }
             //ScrewHole
             rotate([0,0,10])
             translate([armRadius-armThickness*4,0,(wallThickness*2+armWidth)/2])
             rotate([0,90,0])
             cylinder(r = screwRadius, h = armThickness*5);
+            //ScrewHead
+            rotate([0,0,10])
+            translate([armRadius-armThickness*3,0,(wallThickness*2+armWidth)/2])
+            rotate([0,90,0])
+            cylinder(r = 2, h = armThickness*2);
         }
         pieSlice(armRadius,0,20,armWidth+wallThickness*2);
     }
@@ -65,15 +70,15 @@ module clamp(armRadius, gapWidth) {
     intersection() {
         difference() {
             //Base
-            tube(armRadius-(armThickness/4), armRadius+wallThickness*2,armWidth+wallThickness*2);
+            tube(armRadius-(armThickness/4), armRadius+wallThickness,armWidth+wallThickness*2);
             //Width
             translate([0,0,wallThickness+(armWidth-(tolerance+armWidth))/2])
             tube(armRadius-armThickness, armRadius+1, tolerance+armWidth);
             //Nut
             rotate([0,0,10])
-            translate([armRadius+wallThickness,0,(wallThickness*2+armWidth)/2])
+            translate([armRadius+wallThickness/2,0,(wallThickness*2+armWidth)/2])
             rotate([0,90,0])
-            cylinder($fn = 6, r = 10, h = 50);
+            cylinder($fn = 6, r = 3, h = 50);
             //ScrewHole
             rotate([0,0,10])
             translate([armRadius-armThickness*4,0,(wallThickness*2+armWidth)/2])
