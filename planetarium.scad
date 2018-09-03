@@ -63,26 +63,57 @@ module clamp(armRadius) {
         pieSlice(armRadius+wallThickness, 0,45, armWidth+wallThickness*2);
     }
 }
-    
-module ledHolder(armRadius) {
+
+ledHolder(170, true);
+module ledHolder(armRadius, printSprings = true) {
+    springRadius = 15;
+    springHeight = 3;
     intersection() {
         union() {
-            difference() {
-                tube(armRadius-armThickness-wallThickness-tolerance, armRadius-armThickness/2-tolerance, armWidth);
-                
+            difference() { //Base
+                tube(armRadius-armThickness-wallThickness-tolerance, armRadius-armThickness-tolerance, armWidth);
                 translate([0,0,armWidth/2])
                 rotate([0,90,10])
-                cylinder(r=1.5, h = armRadius*2);
+                cylinder(r=1.75, h = armRadius*2); //LED hole
+                rotate([0,0,10])
+                translate([armRadius-armThickness-wallThickness-tolerance + wallThickness/2,0,armWidth/2])
+                rotate([0,90,0])
+                cylinder(r=2.5, h = 15); //LED hole
             }
-            tube(armRadius+tolerance, armRadius+wallThickness+tolerance, armWidth/3);
-            translate([0,0,(armWidth/3)*2])
-                tube(armRadius+tolerance, armRadius+wallThickness+tolerance, armWidth/3);
+            union() { //Prongs
+                springAngle = 10;
+                if(printSprings) {
+                    rotate([0,0,springAngle])
+                    translate([armRadius+tolerance+springHeight/2,0,0])
+                    !spring(springRadius, springHeight, mirror = true);
+                    rotate([0,0,springAngle])
+                    translate([armRadius+tolerance+springHeight/2,0,armWidth-wallThickness])
+                    spring(springRadius, springHeight, mirror = false);
+                }
+                difference() {
+                    translate([0,0,armWidth/2-(m2NutHeight*2+wallThickness*2)/2])
+                    tube(armRadius+tolerance+springHeight/2, armRadius+tolerance+springHeight+m2NutRadius+wallThickness, m2NutHeight*2+wallThickness*2);
+                    rotate([0,0,springAngle])
+                    translate([springHeight + wallThickness / 2 - wallThickness / 3 + armRadius+tolerance+springHeight/2,0,0])
+                    cylinder(r = m2Radius, h = 50);
+                    translate([0,0,(armWidth / 2) - ((m2NutHeight * 3) / 2)]) {
+                        hull() {
+                            rotate([0,0,springAngle])
+                            translate([springHeight + wallThickness / 2 - wallThickness / 3 + armRadius+tolerance+springHeight/2,0,0])
+                            cylinder(r = m2NutRadius, h = m2NutHeight * 3, $fn = 6);
+                            rotate([0,0,springAngle])
+                            translate([springHeight + wallThickness / 2 - wallThickness / 3 + armRadius+tolerance+springHeight/2 + 10,0,0])
+                            cylinder(r = m2NutRadius, h = m2NutHeight * 3, $fn = 6);
+                        }
+                    }
+                }
+            }
         }
-        pieSlice(armRadius+tolerance+wallThickness+0.1, 0, 15, armWidth);
+        pieSlice(armRadius+tolerance+wallThickness+springHeight+m2NutRadius+0.1, 0, 15, armWidth);
     }
-    intersection() {
-        tube(armRadius-armThickness-tolerance-0.1, armRadius+tolerance+0.1, armWidth);
-        pieSlice(armRadius+tolerance+0.2, 0, 5, armWidth);
+    intersection() { //prong connector
+        tube(armRadius-armThickness-tolerance-0.1, armRadius+tolerance+wallThickness+0.1, armWidth);
+        pieSlice(armRadius+tolerance+wallThickness+0.2, 0, 5, armWidth);
     }
 }
 
@@ -193,7 +224,7 @@ module discSegment (armRadius) {
                     }
                     armGradle(gapWidth, armRadius, true, false);
                     mirror([0,1,0])
-                    !armGradle(gapWidth, armRadius, false, false);
+                    armGradle(gapWidth, armRadius, false, false);
                     translate([0,0,wallThickness/2])
                     cube([wallThickness,30,wallThickness], center = true);
                     translate([0,-20,wallThickness/2])
@@ -385,6 +416,7 @@ module arm(armRadius, gapWidth) {
         rotate([0,0,-90-(grooveAngle/2)])
         pieSlice(armRadius+1, 0, grooveAngle, gapWidth * 2);
     }
+
 }
 
 module pieSlice(r, start_angle, end_angle, height=10) {
@@ -449,7 +481,17 @@ module screw(radius, height, headRadius, headHeight) {
     cylinder(r = radius, h = height);
 }
 
-module spring(springRadius, springHeight) {
+module spring(springRadius, springHeight, mirror = false) {
+    if(!mirror) {
+        springHelper(springRadius, springHeight);
+    }
+    if(mirror) {
+        translate([0,0,wallThickness])
+        mirror([0,0,1])
+        springHelper(springRadius, springHeight);
+    }
+}
+module springHelper(springRadius, springHeight) {
     union() { //Spring
         intersection() {
             translate([springRadius-springHeight/2,0,0])
@@ -591,42 +633,42 @@ module switch() {
     cube([6,10,2], center = true);
 }
 
-module stepper28BYJ48() {
-    /*
-    translate([0,0,wallThickness + 0.1])
-    union() {
-        cylinder(r = 14, h = 19);
-        translate([0,0,19])
-        cylinder(r = 4.5, h = 1.5);
-        translate([0,0,20.5])
-        
-        intersection() {
-            cylinder(r = 2.5, h = 8.5);
-            union() {
-                translate([0,0, 3 + 1.49])
-                cube([3, 10, 6], center = true);
-                cylinder(r = 3, h = 1.5);
+module stepper28BYJ48(printMotor = false) {
+    if(printMotor) {
+        translate([0,0,wallThickness + 0.1])
+        union() {
+            cylinder(r = 14, h = 19);
+            translate([0,0,19])
+            cylinder(r = 4.5, h = 1.5);
+            translate([0,0,20.5])
+            
+            intersection() {
+                cylinder(r = 2.5, h = 8.5);
+                union() {
+                    translate([0,0, 3 + 1.49])
+                    cube([3, 10, 6], center = true);
+                    cylinder(r = 3, h = 1.5);
+                }
             }
-        }
-        
-        difference() {
-            translate([0,0,17])
-            hull() {
-                translate([0,17.5,0])
-                cylinder(r = 3.5, h = 2);
-                translate([0,-17.5,0])
-                cylinder(r = 3.5, h = 2);
-            }
+            
+            difference() {
+                translate([0,0,17])
+                hull() {
+                    translate([0,17.5,0])
+                    cylinder(r = 3.5, h = 2);
+                    translate([0,-17.5,0])
+                    cylinder(r = 3.5, h = 2);
+                }
 
-            translate([0,17.5,0])
-            cylinder(r = 2.1, h = 20);
-            translate([0,-17.5,0])
-            cylinder(r = 2.1, h = 20);
+                translate([0,17.5,0])
+                cylinder(r = 2.1, h = 20);
+                translate([0,-17.5,0])
+                cylinder(r = 2.1, h = 20);
+            }
+            translate([8.5,0,9.5])
+            cube([17,14.6,19], center = true);
         }
-        translate([8.5,0,9.5])
-        cube([17,14.6,19], center = true);
     }
-    */
     translate([0,0,wallThickness])
     difference() {
         union() {
@@ -662,44 +704,6 @@ module stepper28BYJ48() {
         rotate([0,90,0])
         translate([0,22,0])
         nutHole(m2NutRadius, m2NutHeight, m2Radius);
-    }
-}
-
-//https://www.ebay.com/itm/Micro-Mini-15MM-Stepper-Motor-2-Phase-4-Wire-Stepping-Motor-Copper-metal-Gear/192035808614?hash=item2cb639e566:g:cGAAAOSwRbtaLkod
-module stepperMount() {
-    difference() {
-        union() {
-            //Upper
-            difference() {
-                tube(7.5, 7.5 + wallThickness, 11);
-                translate([0,-(8 + wallThickness)-1,4.6]) cube([(8 + wallThickness) * 2, (8 + wallThickness) * 2 +1, 11 + 2], center = true);
-            }
-
-            //Straights
-            difference() {
-                difference() {
-                    translate([0,0,5.5]) 
-                    cube([(7.5 + wallThickness) * 2, (7.5 + wallThickness) * 2, 11], center = true);
-                    translate([0,-1,4.6]) 
-                    cube([(7.5) * 2, (7.5 + wallThickness) * 2, 11 + 2], center = true);
-                }
-                translate([0,(8 + wallThickness),4.6]) 
-                cube([(8 + wallThickness) * 2, (8 + wallThickness) * 2, 11 + 2], center = true);
-            }
-            
-            //Feet
-            translate([7.5+wallThickness, -(7.5 + wallThickness), 0])
-            cube([6,wallThickness,11]);
-            mirror([1,0,0]) {
-                translate([7.5+wallThickness, -(7.5 + wallThickness), 0])
-                cube([6,wallThickness,11]);
-            }
-        }
-        
-        //Screwhole
-        translate([0, 5, 5.5])
-        rotate([-90, 0, 0]) 
-        cylinder(r = screwRadius, h = screwHeight);
     }
 }
 
