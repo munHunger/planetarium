@@ -38,8 +38,6 @@ grooveDepth = 0.5;
 grooveHeight = 3;
 
 discSegment(170);
-translate([0,0,segmentHeight])
-%internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
 /*
 %translate([0,0, segmentHeight]) rotate([0,0,0]) discSegment(120);
 %nonPrinted();
