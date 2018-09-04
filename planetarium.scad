@@ -64,7 +64,6 @@ module clamp(armRadius) {
     }
 }
 
-ledHolder(170, true);
 module ledHolder(armRadius, printSprings = true) {
     springRadius = 15;
     springHeight = 3;
@@ -85,7 +84,7 @@ module ledHolder(armRadius, printSprings = true) {
                 if(printSprings) {
                     rotate([0,0,springAngle])
                     translate([armRadius+tolerance+springHeight/2,0,0])
-                    !spring(springRadius, springHeight, mirror = true);
+                    spring(springRadius, springHeight, mirror = true);
                     rotate([0,0,springAngle])
                     translate([armRadius+tolerance+springHeight/2,0,armWidth-wallThickness])
                     spring(springRadius, springHeight, mirror = false);
@@ -189,7 +188,17 @@ module stepperMotorDriverMount() {
     }
 }
 
-module discSegment (armRadius) {
+//https://www.mouser.se/images/microsites/Kycondimen.png
+module microUSB(height) {
+    hull() {
+        translate([0,1.23/2,0])
+        cube([6.9, 1.23, height], center = true);
+        translate([0,-0.65,0])
+        cube([5.4, 0.1, height], center = true);
+    }
+}
+
+module discSegment (armRadius, printGradle = false, printArduino = false, printTopStepper = false, printSwitches = false, printArm = false) {
     gapWidth = rodRadius + tolerance;
     //Base
     union() {
@@ -201,7 +210,7 @@ module discSegment (armRadius) {
                     difference() {
                         difference() {
                             cylinder(r = baseRadius, h = segmentHeight);
-                            translate([0,0, wallThickness]) cylinder(r = baseRadius - wallThickness, h = segmentHeight);
+                            translate([0,0, wallThickness*2-0.01]) cylinder(r = baseRadius - wallThickness, h = segmentHeight);
                         }
                         translate([0,0, -wallThickness]) cylinder(r = ballbearingRadius, h = wallThickness * 3);
                     }
@@ -210,152 +219,179 @@ module discSegment (armRadius) {
                             tube(armRadius - wallThickness - tolerance/2 - 8, armRadius + tolerance/2, armWidth + tolerance);
                         }
                     }
+                    translate([0,0,-0.01])
+                    tube(ballbearingRadius+wallThickness, baseRadius-wallThickness, wallThickness);
                 }
+                internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
             
                 //Arm gradle
-                translate([0,0,wallThickness]) {
-                    translate([baseRadius/2 + m2NutRadius + wallThickness*2+m2NutRadius*4, 0,wallThickness+m2NutHeight+0.1]) {
-                        nutHole(m2NutRadius, m2NutHeight, m2Radius);
-                        translate([2,0,wallThickness+m2NutHeight+6])
-                        rotate([0,0,-90])
-                        switch();
-                        translate([5,0,wallThickness+m2NutHeight+1])
-                        cube([wallThickness/2, wallThickness, 14], center = true);
-                    }
-                    armGradle(gapWidth, armRadius, true, false);
-                    mirror([0,1,0])
-                    armGradle(gapWidth, armRadius, false, false);
-                    translate([0,0,wallThickness/2])
-                    cube([wallThickness,30,wallThickness], center = true);
-                    translate([0,-20,wallThickness/2])
-                    cube([35,25,wallThickness], center = true);
-                    translate([0,-(armWidth/2) - 26, wallThickness + 14 + wallThickness + tolerance / 2])
-                    rotate([-90,-90,0])
-                    union() {
-                        stepper28BYJ48();
-                        /*
-                        translate([0,0,32])
-                        rotate([180, 0, 0])
-                        difference() {
-                            gear (circular_pitch=gearPitch,
-                                gear_thickness = wallThickness,
-                                rim_thickness = wallThickness,
-                                hub_thickness = 6,
-                                bore_diameter = 0,
-                                circles=8,
-                                number_of_teeth=10);
-                            
-                            translate([0,0,-0.1])
-                            intersection() {
-                                cylinder(r = 2.5, h = 8.5);
-                                translate([0,0, 4])
-                                cube([3, 10, 8], center = true);
+                if(printGradle) {
+                    translate([0,0,wallThickness*2]) {
+                        translate([baseRadius/2 + m2NutRadius + wallThickness*2+m2NutRadius*4, 0,wallThickness+m2NutHeight+0.1]) {
+                            nutHole(m2NutRadius, m2NutHeight, m2Radius);
+                            translate([2,0,wallThickness+m2NutHeight+6])
+                            rotate([0,0,-90])
+                            switch();
+                            translate([5,0,wallThickness+m2NutHeight+1])
+                            cube([wallThickness/2, wallThickness, 14], center = true);
+                        }
+                        armGradle(gapWidth, armRadius, true, false);
+                        mirror([0,1,0])
+                        armGradle(gapWidth, armRadius, false, false);
+                        translate([0,-(armWidth/2) - 26, wallThickness + 16 + wallThickness + tolerance / 2])
+                        rotate([-90,-90,0])
+                        union() {
+                            stepper28BYJ48(vertical = false);
+                            //Stepper gear
+                            translate([0,0,32])
+                            rotate([180, 0, 0])
+                            difference() {
+                                gear (circular_pitch=gearPitch,
+                                    gear_thickness = wallThickness,
+                                    rim_thickness = wallThickness,
+                                    hub_thickness = 6,
+                                    bore_diameter = 0,
+                                    circles=8,
+                                    number_of_teeth=10);
+                                
+                                translate([0,0,-0.1])
+                                intersection() {
+                                    cylinder(r = 2.5, h = 8.5);
+                                    translate([0,0, 4])
+                                    cube([3, 10, 8], center = true);
+                                }
                             }
                         }
-                        */
                     }
                 }
             }
-            translate([0,0,-1])
-            tube(ballbearingRadius+wallThickness, baseRadius - wallThickness + 0.01, wallThickness+2);
-        }        
-        
-        color([0.2,0.6,0.9])
-        union() {
-            translate([0,0,wallThickness])
-                tube(ballbearingRadius, baseRadius - wallThickness + 0.01, wallThickness);
-            internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
-        }
-        
-        //Arduino
-        color([0.6,0.1,0.3])
-        rotate([0,0,45])
-        translate([0,24+18+wallThickness+tolerance + armWidth/2,wallThickness*2-0.1 + 20])
-        rotate([0,90,-90])
-        arduino();
-        
-        //Top stepper motor
-        color([0.3,0.9,0.7])
-        rotate([0,0,-15])
-        translate([0,35,wallThickness*2])
-        rotate([0,0,-90])
-        union() {
-            cylinder(r = 14 + wallThickness + tolerance/2, h = 14.01);
-            translate([0,0,14])
+            //Charger
+            rotate([0,0,30])
+            translate([0, baseRadius, segmentHeight/2])
+            rotate([90,-90,0])
+            microUSB(20);
+
+            //Screws
+            //Gradle
             union() {
-                stepper28BYJ48();
-                /*
-                translate([0,0,32])
-                rotate([180, 0, 7.5])
-                difference() {
-                    gear (circular_pitch=gearPitch,
-                        gear_thickness = wallThickness,
-                        rim_thickness = wallThickness,
-                        hub_thickness = 6,
-                        bore_diameter = 0,
-                        circles=8,
-                        number_of_teeth=30);
-                    
-                    translate([0,0,-0.1])
-                    intersection() {
-                        cylinder(r = 2.5, h = 8.5);
-                        translate([0,0, 4])
-                        cube([3, 10, 8], center = true);
+                for(i = [0:1:1]) {
+                    mirror([i,0,0]) {
+                        translate([22,-22,0]) {
+                            screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
+                            cylinder(r = m2HeadRadius, h = wallThickness + m2HeadHeight);
+                        }
+                        translate([baseRadius/2 + m2NutRadius,0,-0.01]) {
+                            screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
+                            cylinder(r = m2HeadRadius, h = wallThickness + m2HeadHeight);
+                        }
+                        translate([baseRadius/2 + m2NutRadius + (wallThickness*2+m2NutRadius*4),0,-0.01]) {
+                            screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
+                            cylinder(r = m2HeadRadius, h = wallThickness + m2HeadHeight);
+                        }
                     }
                 }
-                */
+            }
+            //topStepper
+            union() {
+                for(i = [0:1:1]) {
+                    rotate([0,0,-15])
+                    translate([0,35,0])
+                    rotate([0,0,-90])
+                    mirror([0,i,0]) {
+                        translate([0,22,wallThickness-0.02])
+                        screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
+                    }
+                }
+            }
+        }        
+        
+        //Arduino
+        if(printArduino) {
+            color([0.6,0.1,0.3])
+            rotate([0,0,45])
+            translate([0,24+18+wallThickness+tolerance + armWidth/2,wallThickness*2-0.1 + 20])
+            rotate([0,90,-90])
+            arduino();
+        }
+        
+        //Top stepper motor
+        if(printTopStepper) {
+            color([0.3,0.9,0.7])
+            rotate([0,0,-15])
+            translate([0,35,wallThickness*2])
+            rotate([0,0,-90])
+            union() {
+                cylinder(r = 14 + wallThickness + tolerance/2, h = 14.01);
+                translate([0,0,14])
+                union() {
+                    stepper28BYJ48(vertical = true, verticalOffset = -14);
+                    //Stepper gear
+                    translate([0,0,32])
+                    rotate([180, 0, 7.5])
+                    difference() {
+                        gear (circular_pitch=gearPitch,
+                            gear_thickness = wallThickness,
+                            rim_thickness = wallThickness,
+                            hub_thickness = 6,
+                            bore_diameter = 0,
+                            circles=8,
+                            number_of_teeth=30);
+                        
+                        translate([0,0,-0.1])
+                        intersection() {
+                            cylinder(r = 2.5, h = 8.5);
+                            translate([0,0, 4])
+                            cube([3, 10, 8], center = true);
+                        }
+                    }
+                }
             }
         }
         
     }
     
     //Limit switches
-    color([1.0, 0.1, 0.7])
-    union() {
-        translate([-rodRadius-tolerance*2,0, wallThickness*2 + 13])
-        rotate([-90,0,0])
-        switch();
-        mirror([1,0,0])
-        translate([-rodRadius-tolerance*2,0, wallThickness*2 + 13])
-        rotate([-90,0,0])
-        switch();
+    if(printSwitches) {
+        color([1.0, 0.1, 0.7])
+        union() {
+            translate([-rodRadius-tolerance*2,0, wallThickness*2 + 13])
+            rotate([-90,0,0])
+            switch();
+            mirror([1,0,0])
+            translate([-rodRadius-tolerance*2,0, wallThickness*2 + 13])
+            rotate([-90,0,0])
+            switch();
+        }
     }
     
     //Arm
-    /*
-    translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
-        rotate([90,63,0]) {
-            armPart(3, true, false, 1, armRadius, gapWidth);
-            armPart(3, false, true, 1, armRadius, gapWidth);
-        }
-    }
-    color([0.6,0.6,0.6])
-    translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
-        rotate([90,63,0]) {
-            armPart(3, true, true, 0, armRadius, gapWidth);
-            armPart(3, true, true, 2, armRadius, gapWidth);
-        }
-    }
-    */
     //3 SECTION
-    color([0.4,0.4,0.4])
-    translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
-        rotate([90,63,0]) {
-            armPart(4, true, false, 1, armRadius, gapWidth);
-            armPart(4, false, true, 1, armRadius, gapWidth);
-        }
-    }
-    translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
-        rotate([90,63,0]) {
-            armPart(4, true, false, 2, armRadius, gapWidth);
-            armPart(4, false, true, 2, armRadius, gapWidth);
-        }
-    }
-    color([0.6,0.6,0.6])
-    translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
-        rotate([90,63,0]) {
-            armPart(4, true, true, 0, armRadius, gapWidth);
-            armPart(4, true, true, 3, armRadius, gapWidth);
+    if(printArm) {
+        union() {
+            color([0.4,0.4,0.4])
+            translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
+                rotate([90,63,0]) {
+                    armPart(4, true, false, 1, armRadius, gapWidth);
+                    armPart(4, false, true, 1, armRadius, gapWidth);
+                }
+            }
+            translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
+                rotate([90,63,0]) {
+                    armPart(4, true, false, 2, armRadius, gapWidth);
+                    armPart(4, false, true, 2, armRadius, gapWidth);
+                }
+            }
+            color([0.6,0.6,0.6])
+            translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
+                rotate([90,63,0]) {
+                    armPart(4, true, true, 0, armRadius, gapWidth);
+                    armPart(4, true, true, 3, armRadius, gapWidth);
+                }
+            }
+            translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) 
+            rotate([90,63,0])
+            rotate([0,0,180]) 
+            ledHolder(armRadius);
         }
     }
 }
@@ -416,7 +452,6 @@ module arm(armRadius, gapWidth) {
         rotate([0,0,-90-(grooveAngle/2)])
         pieSlice(armRadius+1, 0, grooveAngle, gapWidth * 2);
     }
-
 }
 
 module pieSlice(r, start_angle, end_angle, height=10) {
@@ -633,7 +668,7 @@ module switch() {
     cube([6,10,2], center = true);
 }
 
-module stepper28BYJ48(printMotor = false) {
+module stepper28BYJ48(printMotor = false, vertical = false, verticalOffset) {
     if(printMotor) {
         translate([0,0,wallThickness + 0.1])
         union() {
@@ -686,8 +721,12 @@ module stepper28BYJ48(printMotor = false) {
                 cylinder(r = 3.5, h = 2);
             }
         }
-        translate([0,0,-0.1])
-        cylinder(r = 14 + tolerance/2, h = 19);
+        translate([0,0,-0.1]) {
+            cylinder(r = 14 + tolerance, h = 19);
+            if(vertical) {
+                tube(20, 35, 19);
+            }
+        }
 
         translate([0,17.5,-0.01])
         cylinder(r = 2.1, h = 20);
@@ -695,15 +734,19 @@ module stepper28BYJ48(printMotor = false) {
         cylinder(r = 2.1, h = 20);
     }
     cylinder(r = 14 + wallThickness + tolerance/2, h = wallThickness + 0.01);
-    translate([-18.25,0,14])
-    rotate([0,90,0])
-    translate([0,22,0])
-    nutHole(m2NutRadius, m2NutHeight, m2Radius);
-    mirror([0,1,0]) {
-        translate([-18.25,0,14])
-        rotate([0,90,0])
-        translate([0,22,0])
-        nutHole(m2NutRadius, m2NutHeight, m2Radius);
+    for(i = [0:1:1]) {
+        mirror([0,i,0]) {
+            if(!vertical) {
+                translate([-24.25,0,14])
+                rotate([0,90,0])
+                translate([0,22,0])
+                nutHole(m2NutRadius, m2NutHeight, m2Radius);
+            }
+            else {
+                translate([0,22,verticalOffset])
+                nutHole(m2NutRadius, m2NutHeight, m2Radius);
+            }
+        }
     }
 }
 
