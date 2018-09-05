@@ -196,7 +196,7 @@ module microUSB(height) {
     }
 }
 
-module discSegment (armRadius, printGradle = false, printArduino = false, printTopStepper = false, printSwitches = false, printArm = false) {
+module discSegment (armRadius, printGradle = false, printArduino = false, printTopStepper = true , printSwitches = false, printArm = false) {
     gapWidth = rodRadius + tolerance;
     //Base
     union() {
@@ -233,9 +233,9 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
                             translate([5,0,wallThickness+m2NutHeight+1])
                             cube([wallThickness/2, wallThickness, 14], center = true);
                         }
-                        armGradle(gapWidth, armRadius, true, false);
+                        armGradle(gapWidth, armRadius, inner = true);
                         mirror([0,1,0])
-                        armGradle(gapWidth, armRadius, false, false);
+                        armGradle(gapWidth, armRadius, inner = false);
                         translate([0,-(armWidth/2) - 26, wallThickness + 16 + wallThickness + tolerance / 2])
                         rotate([-90,-90,0])
                         union() {
@@ -278,11 +278,11 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
                             screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
                             cylinder(r = m2HeadRadius, h = wallThickness + m2HeadHeight);
                         }
-                        translate([baseRadius/2 + m2NutRadius,0,-0.01]) {
+                        translate([baseRadius/2 + m2NutRadius - wallThickness,0,-0.01]) {
                             screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
                             cylinder(r = m2HeadRadius, h = wallThickness + m2HeadHeight);
                         }
-                        translate([baseRadius/2 + m2NutRadius + (wallThickness*2+m2NutRadius*4),0,-0.01]) {
+                        translate([baseRadius/2 + m2NutRadius + (wallThickness+m2NutRadius*4),0,-0.01]) {
                             screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
                             cylinder(r = m2HeadRadius, h = wallThickness + m2HeadHeight);
                         }
@@ -323,6 +323,7 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
                 translate([0,0,14])
                 union() {
                     stepper28BYJ48(vertical = true, verticalOffset = -14);
+                    /*
                     //Stepper gear
                     translate([0,0,32])
                     rotate([180, 0, 7.5])
@@ -342,6 +343,7 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
                             cube([3, 10, 8], center = true);
                         }
                     }
+                    */
                 }
             }
         }
@@ -365,6 +367,7 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
     //Arm
     //3 SECTION
     if(printArm) {
+        translate([0,0,wallThickness])
         union() {
             color([0.4,0.4,0.4])
             translate([0, armWidth / 2, armRadius + wallThickness * 2 + 3]) {
@@ -549,7 +552,7 @@ module springHelper(springRadius, springHeight) {
     }
 }
 
-module armGradle(gapWidth, armRadius, inner, printSprings = true) {
+module armGradle(gapWidth, armRadius, inner, printSprings = false) {
     springRadius = 50;
     springHeight = 5;
     union() {
@@ -566,48 +569,45 @@ module armGradle(gapWidth, armRadius, inner, printSprings = true) {
                             }
                         }
                         //nut holes
-                        translate([0, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3])
-                        rotate([90,0,0])
-                        rotate([0,0,-13.5])
-                        translate([0,-armRadius-springHeight/2-(springHeight + wallThickness / 2 - wallThickness / 3),screwHeight / 2])
-                        rotate([180,0,0])
-                        cylinder(r = m2NutRadius, h = screwHeight);
-                        translate([0, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3])
-                        rotate([90,0,0])
-                        rotate([0,0,13.5])
-                        translate([0,-armRadius-springHeight/2-(springHeight + wallThickness / 2 - wallThickness / 3),screwHeight / 2])
-                        rotate([180,0,0])
-                        cylinder(r = m2NutRadius, h = screwHeight);
+                        for(i = [0:1:1]){
+                            mirror([i,0,0]) {
+                                translate([wallThickness, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3])
+                                rotate([90,0,0])
+                                rotate([0,0,-13.5])
+                                translate([0,-armRadius-springHeight/2-(springHeight + wallThickness / 2 - wallThickness / 3),screwHeight / 2])
+                                rotate([180,0,0])
+                                cylinder(r = m2ScrewRadius, h = screwHeight);
+                            }
+                        }
+                        //nut holders
+                        for(i = [0:1:1]) {
+                            mirror([i,0,0]) {
+                                translate([wallThickness, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3])
+                                rotate([90,0,0])
+                                rotate([0,0,-13.5])
+                                translate([0, -armRadius-springHeight/2-(springHeight + wallThickness / 2 - wallThickness / 3), m2NutHeight-0.01])
+                                rotate([180,0,0])
+                                cylinder(r=m2NutRadius, h=m2NutHeight, $fn = 6);
+                            }
+                        }
                     }
-                    //nut holders
-                    translate([0, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3])
-                    rotate([90,0,0])
-                    rotate([0,0,-13.5])
-                    translate([0,-armRadius-springHeight/2-(springHeight + wallThickness / 2 - wallThickness / 3),wallThickness])
-                    rotate([180,0,0])
-                    nutHole(m2NutRadius, m2NutHeight, m2Radius);
-                    translate([0, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3])
-                    rotate([90,0,0])
-                    rotate([0,0,13.5])
-                    translate([0,-armRadius-springHeight/2-(springHeight + wallThickness / 2 - wallThickness / 3),wallThickness])
-                    rotate([180,0,0])
-                    nutHole(m2NutRadius, m2NutHeight, m2Radius);
                 }
-                cylinder(r = baseRadius, h = segmentHeight);
+                cylinder(r = baseRadius - wallThickness - tolerance, h = segmentHeight);
             }
-            cube([baseRadius,baseRadius,segmentHeight], center = true);
+            cube([armWidth,baseRadius,segmentHeight], center = true);
         }
         if(printSprings) {
             translate([0, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3]){
                 rotate([90, 0, 0]) {
-                    rotate([0,0,13.5])
-                    translate([0,-armRadius-springHeight/2,wallThickness + tolerance])
-                    rotate([0,0,-90])
-                    spring(springRadius, springHeight);
-                    rotate([0,0,-13.5])
-                    translate([0,-armRadius-springHeight/2,wallThickness + tolerance])
-                    rotate([0,0,-90])
-                    spring(springRadius, springHeight);
+                    for(i = [0:1:1]) {
+                        mirror([i,0,0]) {
+                            translate([-wallThickness,0,0])
+                            rotate([0,0,13.5])
+                            translate([0,-armRadius-springHeight/2,wallThickness + tolerance])
+                            rotate([0,0,-90])
+                            spring(springRadius, springHeight);
+                        }
+                    }
                 }
             }
         }
@@ -618,28 +618,26 @@ module armGradle(gapWidth, armRadius, inner, printSprings = true) {
         
         if(inner) {
             nutOffset = 0;
-            translate([baseRadius/2 + m2NutRadius + nutOffset, 0,0]) {
-                nutHole(m2NutRadius, m2NutHeight, m2Radius);
-                translate([-wallThickness/2,m2Radius,0])
-                cube([wallThickness,gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance - m2Radius ,wallThickness]);
-            }
-            translate([-(baseRadius/2 + m2NutRadius + nutOffset), 0,0]) {
-                nutHole(m2NutRadius, m2NutHeight, m2Radius);
-                translate([-wallThickness/2,m2Radius,0])
-                cube([wallThickness,gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance - m2Radius ,wallThickness]);
+            for(i = [0:1:1]) {
+                mirror([i,0,0]) {
+                    translate([baseRadius/2 + m2NutRadius + nutOffset - wallThickness, 0,0]) {
+                        nutHole(m2NutRadius, m2NutHeight, m2Radius);
+                        translate([-wallThickness/2,m2Radius,0])
+                        cube([wallThickness,gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance - m2Radius ,wallThickness]);
+                    }
+                }
             }
         }
         else {
             nutOffset = wallThickness*2+m2NutRadius*4;
-            translate([baseRadius/2 + m2NutRadius + nutOffset, 0,0]) {
-                nutHole(m2NutRadius, m2NutHeight, m2Radius);
-                translate([-wallThickness/2,m2Radius,0])
-                cube([wallThickness,gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance - m2Radius ,wallThickness]);
-            }
-            translate([-(baseRadius/2 + m2NutRadius + nutOffset), 0,0]) {
-                nutHole(m2NutRadius, m2NutHeight, m2Radius);
-                translate([-wallThickness/2,m2Radius,0])
-                cube([wallThickness,gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance - m2Radius ,wallThickness]);
+            for(i = [0:1:1]) {
+                mirror([i,0,0]) {
+                    translate([baseRadius/2 + m2NutRadius + nutOffset - wallThickness, 0,0]) {
+                        nutHole(m2NutRadius, m2NutHeight, m2Radius);
+                        translate([-wallThickness/2,m2Radius,0])
+                        cube([wallThickness,gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance - m2Radius ,wallThickness]);
+                    }
+                }
             }
         }
     }
