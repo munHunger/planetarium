@@ -196,7 +196,7 @@ module microUSB(height) {
     }
 }
 
-module discSegment (armRadius, printGradle = false, printArduino = false, printTopStepper = true , printSwitches = false, printArm = false) {
+module discSegment (armRadius, printGradle = true, printArduino = false, printTopStepper = false , printSwitches = false, printArm = false) {
     gapWidth = rodRadius + tolerance;
     //Base
     union() {
@@ -235,7 +235,7 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
                         }
                         armGradle(gapWidth, armRadius, inner = true);
                         mirror([0,1,0])
-                        armGradle(gapWidth, armRadius, inner = false);
+                        !armGradle(gapWidth, armRadius, inner = false);
                         translate([0,-(armWidth/2) - 26, wallThickness + 16 + wallThickness + tolerance / 2])
                         rotate([-90,-90,0])
                         union() {
@@ -553,7 +553,7 @@ module springHelper(springRadius, springHeight) {
 }
 
 module armGradle(gapWidth, armRadius, inner, printSprings = false) {
-    springRadius = 50;
+    springRadius = 30;
     springHeight = 5;
     union() {
         difference() {
@@ -571,9 +571,9 @@ module armGradle(gapWidth, armRadius, inner, printSprings = false) {
                         //nut holes
                         for(i = [0:1:1]){
                             mirror([i,0,0]) {
-                                translate([wallThickness, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3])
+                                translate([0, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3])
                                 rotate([90,0,0])
-                                rotate([0,0,-13.5])
+                                rotate([0,0,-13])
                                 translate([0,-armRadius-springHeight/2-(springHeight + wallThickness / 2 - wallThickness / 3),screwHeight / 2])
                                 rotate([180,0,0])
                                 cylinder(r = m2ScrewRadius, h = screwHeight);
@@ -582,9 +582,9 @@ module armGradle(gapWidth, armRadius, inner, printSprings = false) {
                         //nut holders
                         for(i = [0:1:1]) {
                             mirror([i,0,0]) {
-                                translate([wallThickness, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3])
+                                translate([0, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3])
                                 rotate([90,0,0])
-                                rotate([0,0,-13.5])
+                                rotate([0,0,-13])
                                 translate([0, -armRadius-springHeight/2-(springHeight + wallThickness / 2 - wallThickness / 3), m2NutHeight-0.01])
                                 rotate([180,0,0])
                                 cylinder(r=m2NutRadius, h=m2NutHeight, $fn = 6);
@@ -601,8 +601,7 @@ module armGradle(gapWidth, armRadius, inner, printSprings = false) {
                 rotate([90, 0, 0]) {
                     for(i = [0:1:1]) {
                         mirror([i,0,0]) {
-                            translate([-wallThickness,0,0])
-                            rotate([0,0,13.5])
+                            rotate([0,0,13])
                             translate([0,-armRadius-springHeight/2,wallThickness + tolerance])
                             rotate([0,0,-90])
                             spring(springRadius, springHeight);
