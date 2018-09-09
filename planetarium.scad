@@ -196,7 +196,7 @@ module microUSB(height) {
     }
 }
 
-module discSegment (armRadius, printGradle = true, printArduino = false, printTopStepper = false , printSwitches = false, printArm = false) {
+module discSegment (armRadius, printGradle = false, printArduino = false, printTopStepper = false , printSwitches = false, printArm = false) {
     gapWidth = rodRadius + tolerance;
     //Base
     union() {
@@ -214,28 +214,60 @@ module discSegment (armRadius, printGradle = true, printArduino = false, printTo
                     }
                     translate([0, (armWidth + tolerance) / 2, armRadius + wallThickness * 2 + 3]) {
                         rotate([90,0,0]) {
-                            tube(armRadius - wallThickness - tolerance/2 - 8, armRadius + tolerance/2, armWidth + tolerance);
+                            tube(armRadius - wallThickness - tolerance/2 - 12, armRadius + tolerance/2, armWidth + tolerance);
                         }
                     }
                     translate([0,0,-0.01])
                     tube(ballbearingRadius+wallThickness, baseRadius-wallThickness, wallThickness);
                 }
                 internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
-            
+
+                //Switchount
+                for(i = [0:1:1]) {
+                    mirror([i,0,0]) {
+                        translate([baseRadius/2  + wallThickness*2+m2NutRadius*4, 0,segmentHeight-wallThickness]) 
+                        difference() {
+                            hull() {
+                                cylinder(r = m2Radius + wallThickness, h = wallThickness);
+                                translate([6,0,0])
+                                cylinder(r = m2Radius + wallThickness, h = wallThickness);
+                            }
+                            translate([0,0,wallThickness+0.01])
+                            rotate([180,0,0])
+                            screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
+                        }
+                        //SwitchHolder
+                        if(printSwitches) {
+                            translate([baseRadius/2  + wallThickness*2+m2NutRadius*4, 0,segmentHeight-wallThickness]) 
+                            rotate([180,0,0])
+                            union() {
+                                nutHole(m2NutRadius, m2NutHeight, m2Radius);
+                                translate([2,0,wallThickness+m2NutHeight+6])
+                                rotate([0,0,-90])
+                                switch();
+                                translate([5,0,wallThickness+m2NutHeight+1])
+                                cube([wallThickness/2, wallThickness, 14], center = true);
+                            }
+                        }
+                    }
+                }
+
+                //Arm brackets
+                for(x = [0:1:1]) {
+                    for(y = [0:1:1]) {
+                        mirror([0,y,0])
+                        mirror([x,0,0]) {
+                            translate([baseRadius - wallThickness*4,gapWidth+3*wallThickness-tolerance,wallThickness*2])
+                            cube([wallThickness*3, wallThickness, (segmentHeight/3)*2]);
+                        }
+                    }
+                }
                 //Arm gradle
                 if(printGradle) {
                     translate([0,0,wallThickness*2]) {
-                        translate([baseRadius/2 + m2NutRadius + wallThickness*2+m2NutRadius*4, 0,wallThickness+m2NutHeight+0.1]) {
-                            nutHole(m2NutRadius, m2NutHeight, m2Radius);
-                            translate([2,0,wallThickness+m2NutHeight+6])
-                            rotate([0,0,-90])
-                            switch();
-                            translate([5,0,wallThickness+m2NutHeight+1])
-                            cube([wallThickness/2, wallThickness, 14], center = true);
-                        }
-                        armGradle(gapWidth, armRadius, inner = true);
+                        armGradle(gapWidth, armRadius);
                         mirror([0,1,0])
-                        !armGradle(gapWidth, armRadius, inner = false);
+                        armGradle(gapWidth, armRadius);
                         translate([0,-(armWidth/2) - 26, wallThickness + 16 + wallThickness + tolerance / 2])
                         rotate([-90,-90,0])
                         union() {
@@ -275,14 +307,6 @@ module discSegment (armRadius, printGradle = true, printArduino = false, printTo
                 for(i = [0:1:1]) {
                     mirror([i,0,0]) {
                         translate([22,-22,0]) {
-                            screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
-                            cylinder(r = m2HeadRadius, h = wallThickness + m2HeadHeight);
-                        }
-                        translate([baseRadius/2 + m2NutRadius - wallThickness,0,-0.01]) {
-                            screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
-                            cylinder(r = m2HeadRadius, h = wallThickness + m2HeadHeight);
-                        }
-                        translate([baseRadius/2 + m2NutRadius + (wallThickness+m2NutRadius*4),0,-0.01]) {
                             screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
                             cylinder(r = m2HeadRadius, h = wallThickness + m2HeadHeight);
                         }
@@ -552,7 +576,7 @@ module springHelper(springRadius, springHeight) {
     }
 }
 
-module armGradle(gapWidth, armRadius, inner, printSprings = false) {
+module armGradle(gapWidth, armRadius, printSprings = false) {
     springRadius = 30;
     springHeight = 5;
     union() {
@@ -614,31 +638,6 @@ module armGradle(gapWidth, armRadius, inner, printSprings = false) {
         //Support bar
         translate([0, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance - wallThickness / 2,wallThickness/2])
         cube([baseRadius, wallThickness, wallThickness],center = true);
-        
-        if(inner) {
-            nutOffset = 0;
-            for(i = [0:1:1]) {
-                mirror([i,0,0]) {
-                    translate([baseRadius/2 + m2NutRadius + nutOffset - wallThickness, 0,0]) {
-                        nutHole(m2NutRadius, m2NutHeight, m2Radius);
-                        translate([-wallThickness/2,m2Radius,0])
-                        cube([wallThickness,gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance - m2Radius ,wallThickness]);
-                    }
-                }
-            }
-        }
-        else {
-            nutOffset = wallThickness*2+m2NutRadius*4;
-            for(i = [0:1:1]) {
-                mirror([i,0,0]) {
-                    translate([baseRadius/2 + m2NutRadius + nutOffset - wallThickness, 0,0]) {
-                        nutHole(m2NutRadius, m2NutHeight, m2Radius);
-                        translate([-wallThickness/2,m2Radius,0])
-                        cube([wallThickness,gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance - m2Radius ,wallThickness]);
-                    }
-                }
-            }
-        }
     }
 }
 
