@@ -16,6 +16,7 @@ m2HeadHeight = 1.5;
 m2HeadRadius = 2;
 m2NutRadius = 2.4;
 m2NutHeight = 2;
+m3NutRadius = 2.7;
 
 baseRadius = 60;
 wallThickness = 4;
@@ -263,28 +264,28 @@ module discSegment (armRadius, printGradle = true, printArduino = false, printTo
                     }
                 }
                 //Arm gradle
-                !if(printGradle) {
+                if(printGradle) {
                     translate([0,0,wallThickness*2]) {
                         armGradle(gapWidth, armRadius);
                         mirror([0,1,0])
                         armGradle(gapWidth, armRadius);
-                        translate([0,-(armWidth/2) - 26, wallThickness + 16 + wallThickness + tolerance / 2])
+                        translate([0,-(armWidth/2) - 26 - wallThickness, wallThickness + 16 + tolerance / 2])
                         rotate([-90,-90,0])
                         union() {
                             stepper28BYJ48(vertical = false);
                             //Stepper gear
-                            translate([-8,0,32])
+                            translate([8,0,32+wallThickness])
                             rotate([180, 0, 0])
-                            difference() {
+                            !difference() {
                                 gear (circular_pitch=gearPitch,
                                     gear_thickness = wallThickness,
                                     rim_thickness = wallThickness,
-                                    hub_thickness = 6,
+                                    hub_thickness = 6+wallThickness,
                                     bore_diameter = 0,
                                     circles=8,
-                                    number_of_teeth=10);
+                                    number_of_teeth=19);
                                 
-                                translate([0,0,-0.1])
+                                translate([0,0,wallThickness + 0.1])
                                 intersection() {
                                     cylinder(r = 2.5, h = 8.5);
                                     translate([0,0, 4])
@@ -662,8 +663,9 @@ module switch() {
     cube([6,10,2], center = true);
 }
 
-module stepper28BYJ48(printMotor = true, vertical = false, verticalOffset) {
+module stepper28BYJ48(printMotor = false, vertical = false, verticalOffset) {
     if(printMotor) {
+        rotate([0,0,180])
         translate([0,0,wallThickness + 0.1])
         union() {
             cylinder(r = 14, h = 19);
@@ -704,7 +706,7 @@ module stepper28BYJ48(printMotor = true, vertical = false, verticalOffset) {
         union() {
             difference() {
                 translate([0,0,8.5])
-                cube([28 + tolerance + wallThickness*2+12, 28 + tolerance + wallThickness*2, 17], center = true);
+                cube([28 + tolerance + 12, 28 + tolerance + wallThickness*2, 17], center = true);
                 translate([0,-20,-0.1])
                 cube([40, 40, 19]);
             }
@@ -715,7 +717,10 @@ module stepper28BYJ48(printMotor = true, vertical = false, verticalOffset) {
                 translate([0,-17.5,0])
                 cylinder(r = 3.5, h = 2);
             }
+            cylinder(r = 14 + wallThickness + tolerance/2, h = wallThickness + 0.01);
         }
+        translate([-10,0,9.5])
+        cube([17,14.6,19+20], center = true);
         translate([0,0,-0.1]) {
             cylinder(r = 14 + tolerance, h = 19);
             if(vertical) {
@@ -723,16 +728,19 @@ module stepper28BYJ48(printMotor = true, vertical = false, verticalOffset) {
             }
         }
 
-        translate([0,17.5,-0.01])
-        cylinder(r = 2.1, h = 20);
-        translate([0,-17.5,-0.01])
-        cylinder(r = 2.1, h = 20);
+        for(i = [0:1:1]) {
+            mirror([0,i,0]) {
+                translate([0,17.5,-0.01])
+                cylinder(r = 2.1, h = 20);
+                translate([0,17.5,wallThickness])
+                cylinder(r = m3NutRadius, h = 11.5, $fn = 6);
+            }
+        }
     }
-    cylinder(r = 14 + wallThickness + tolerance/2, h = wallThickness + 0.01);
     for(i = [0:1:1]) {
         mirror([0,i,0]) {
             if(!vertical) {
-                translate([-24.25,0,14])
+                translate([-24.25+wallThickness,0,14])
                 rotate([0,90,0])
                 translate([0,22,0])
                 nutHole(m2NutRadius, m2NutHeight, m2Radius);
