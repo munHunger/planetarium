@@ -39,6 +39,8 @@ grooveDepth = 0.5;
 grooveHeight = 3;
 
 discSegment(170);
+translate([0,0,segmentHeight])
+internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
 /*
 %translate([0,0, segmentHeight]) rotate([0,0,0]) discSegment(120);
 %nonPrinted();
@@ -197,7 +199,7 @@ module microUSB(height) {
     }
 }
 
-module discSegment (armRadius, printGradle = true, printArduino = false, printTopStepper = false , printSwitches = false, printArm = false) {
+module discSegment (armRadius, printGradle = false, printArduino = false, printTopStepper = true , printSwitches = false, printArm = false) {
     gapWidth = rodRadius + tolerance;
     //Base
     union() {
@@ -346,20 +348,20 @@ module discSegment (armRadius, printGradle = true, printArduino = false, printTo
             union() {
                 cylinder(r = 14 + wallThickness + tolerance/2, h = 14.01);
                 translate([0,0,14])
+                rotate([0,0,180])
                 union() {
                     stepper28BYJ48(vertical = true, verticalOffset = -14);
-                    /*
                     //Stepper gear
-                    translate([0,0,32])
+                    translate([8,0,32])
                     rotate([180, 0, 7.5])
-                    difference() {
+                    !difference() {
                         gear (circular_pitch=gearPitch,
                             gear_thickness = wallThickness,
                             rim_thickness = wallThickness,
                             hub_thickness = 6,
                             bore_diameter = 0,
                             circles=8,
-                            number_of_teeth=30);
+                            number_of_teeth=14);
                         
                         translate([0,0,-0.1])
                         intersection() {
@@ -368,7 +370,6 @@ module discSegment (armRadius, printGradle = true, printArduino = false, printTo
                             cube([3, 10, 8], center = true);
                         }
                     }
-                    */
                 }
             }
         }
@@ -663,7 +664,7 @@ module switch() {
     cube([6,10,2], center = true);
 }
 
-module stepper28BYJ48(printMotor = false, vertical = false, verticalOffset) {
+module stepper28BYJ48(printMotor = true, vertical = false, verticalOffset) {
     if(printMotor) {
         rotate([0,0,180])
         translate([0,0,wallThickness + 0.1])
