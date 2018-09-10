@@ -196,7 +196,7 @@ module microUSB(height) {
     }
 }
 
-module discSegment (armRadius, printGradle = false, printArduino = false, printTopStepper = false , printSwitches = false, printArm = false) {
+module discSegment (armRadius, printGradle = true, printArduino = false, printTopStepper = false , printSwitches = false, printArm = false) {
     gapWidth = rodRadius + tolerance;
     //Base
     union() {
@@ -263,7 +263,7 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
                     }
                 }
                 //Arm gradle
-                if(printGradle) {
+                !if(printGradle) {
                     translate([0,0,wallThickness*2]) {
                         armGradle(gapWidth, armRadius);
                         mirror([0,1,0])
@@ -273,7 +273,7 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
                         union() {
                             stepper28BYJ48(vertical = false);
                             //Stepper gear
-                            translate([0,0,32])
+                            translate([-8,0,32])
                             rotate([180, 0, 0])
                             difference() {
                                 gear (circular_pitch=gearPitch,
@@ -662,15 +662,16 @@ module switch() {
     cube([6,10,2], center = true);
 }
 
-module stepper28BYJ48(printMotor = false, vertical = false, verticalOffset) {
+module stepper28BYJ48(printMotor = true, vertical = false, verticalOffset) {
     if(printMotor) {
         translate([0,0,wallThickness + 0.1])
         union() {
             cylinder(r = 14, h = 19);
-            translate([0,0,19])
+            translate([-8,0,19])
             cylinder(r = 4.5, h = 1.5);
             translate([0,0,20.5])
             
+            translate([-8,0,0])
             intersection() {
                 cylinder(r = 2.5, h = 8.5);
                 union() {
