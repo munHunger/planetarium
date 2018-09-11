@@ -39,8 +39,8 @@ grooveDepth = 0.5;
 grooveHeight = 3;
 
 discSegment(170);
-translate([0,0,segmentHeight])
-internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
+// translate([0,0,segmentHeight])
+// internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
 /*
 %translate([0,0, segmentHeight]) rotate([0,0,0]) discSegment(120);
 %nonPrinted();
@@ -199,7 +199,7 @@ module microUSB(height) {
     }
 }
 
-module discSegment (armRadius, printGradle = false, printArduino = false, printTopStepper = true , printSwitches = false, printArm = false) {
+module discSegment (armRadius, printGradle = true, printArduino = false, printTopStepper = false , printSwitches = false, printArm = false) {
     gapWidth = rodRadius + tolerance;
     //Base
     union() {
@@ -210,7 +210,7 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
                     //Gap from center in arm
                     difference() {
                         difference() {
-                            cylinder(r = baseRadius, h = segmentHeight);
+                            cylinder(r = baseRadius, h = 10);//segmentHeight);
                             translate([0,0, wallThickness*2-0.01]) cylinder(r = baseRadius - wallThickness, h = segmentHeight);
                         }
                         translate([0,0, -wallThickness]) cylinder(r = ballbearingRadius, h = wallThickness * 3);
@@ -271,21 +271,107 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
                         armGradle(gapWidth, armRadius);
                         mirror([0,1,0])
                         armGradle(gapWidth, armRadius);
-                        translate([0,-(armWidth/2) - 26 - wallThickness, wallThickness + 16 + tolerance / 2])
+                        translate([0,-(armWidth/2) - 26 - wallThickness*5, wallThickness + 16 + tolerance / 2])
                         rotate([-90,-90,0])
                         union() {
                             stepper28BYJ48(vertical = false);
+                            translate([0,0,32])
+                            union() {
+                                union() {
+                                    translate([0,0,-2])
+                                    tube(14,20,wallThickness/2);
+                                    translate([0,0,wallThickness])
+                                    tube(14,20,wallThickness/2);
+                                    internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = 20);
+                                    for(i = [0:1:1]) {
+                                        mirror([0,i,0]) {
+                                            translate([0,22,-wallThickness/2])
+                                            difference() {
+                                                cylinder(r = 5, h = wallThickness);
+                                                translate([0,0,-0.1])
+                                                cylinder(r = 2, h = wallThickness+0.2);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                for(i = [0:1:1]) {
+                                    mirror([0,i,0]) {
+                                        translate([0,22,-wallThickness/2 - wallThickness])
+                                        difference() {
+                                            hull() {
+                                                cylinder(r = 5, h = wallThickness);
+                                                translate([0,-5,-wallThickness])
+                                                cylinder(r = 5, h = wallThickness);
+                                            }
+                                            translate([0,0,-10])
+                                            cylinder(r = 2, 20);
+                                            translate([0,0,-10])
+                                            cylinder(r = m3NutRadius, 10, $fn=6);
+                                            translate([0,-5,-10])
+                                            cylinder(r = 2, 20);
+                                            translate([0,-5,0])
+                                            cylinder(r = 5, 20);
+                                        }
+                                    }
+                                }
+                                translate([0,0,-wallThickness])
+                                gear (circular_pitch=gearPitch,
+                                    gear_thickness = wallThickness*2,
+                                    rim_thickness = wallThickness*2,
+                                    hub_thickness = 0,
+                                    bore_diameter = 0,
+                                    circles=8,
+                                    number_of_teeth=8);
+
+                                planetCount = 3;
+                                for(i = [0:1:planetCount]) {
+                                    rotate([0,0,i*(360/planetCount)]) {
+                                        !translate([9,0,0]) {
+                                            gear (circular_pitch=gearPitch,
+                                                gear_thickness = wallThickness,
+                                                rim_thickness = wallThickness,
+                                                hub_thickness = 0,
+                                                bore_diameter = 0,
+                                                number_of_teeth=10);
+                                            cylinder(r = 2, h = wallThickness*2);
+                                        }
+                                    }
+                                }
+
+                                union() {
+                                    translate([0,0,wallThickness*2])
+                                    gear (circular_pitch=gearPitch,
+                                        gear_thickness = wallThickness*3,
+                                        rim_thickness = wallThickness*3,
+                                        hub_thickness = 0,
+                                        bore_diameter = 0,
+                                        circles=8,
+                                        number_of_teeth=6);
+                                    translate([0,0,wallThickness])
+                                    difference() {
+                                        cylinder(r = 12, h = wallThickness);
+                                        for(i = [0:1:planetCount]) {
+                                            rotate([0,0,i*(360/planetCount)]) {
+                                                translate([9,0,-0.01]) {
+                                                    cylinder(r = 2.1, h = wallThickness*2);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             //Stepper gear
-                            translate([8,0,32+wallThickness])
+                            translate([8,0,32])
                             rotate([180, 0, 0])
-                            !difference() {
+                            difference() {
                                 gear (circular_pitch=gearPitch,
                                     gear_thickness = wallThickness,
                                     rim_thickness = wallThickness,
-                                    hub_thickness = 6+wallThickness,
+                                    hub_thickness = 0,
                                     bore_diameter = 0,
                                     circles=8,
-                                    number_of_teeth=19);
+                                    number_of_teeth=7);
                                 
                                 translate([0,0,wallThickness + 0.1])
                                 intersection() {
@@ -354,7 +440,7 @@ module discSegment (armRadius, printGradle = false, printArduino = false, printT
                     //Stepper gear
                     translate([8,0,32])
                     rotate([180, 0, 7.5])
-                    !difference() {
+                    difference() {
                         gear (circular_pitch=gearPitch,
                             gear_thickness = wallThickness,
                             rim_thickness = wallThickness,
