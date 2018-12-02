@@ -268,7 +268,7 @@ module discSegment (armRadius, printGradle = true, printArduino = false, printTo
                 //Arm gradle
                 if(printGradle) {
                     translate([0,0,wallThickness*2]) {
-                        armGradle(gapWidth, armRadius);
+                        !armGradle(gapWidth, armRadius);
                         mirror([0,1,0])
                         armGradle(gapWidth, armRadius);
                         translate([0,-(armWidth/2) - 26 - wallThickness*5, wallThickness + 16 + tolerance / 2])
@@ -327,7 +327,7 @@ module discSegment (armRadius, printGradle = true, printArduino = false, printTo
                                 planetCount = 3;
                                 for(i = [0:1:planetCount]) {
                                     rotate([0,0,i*(360/planetCount)]) {
-                                        !translate([9,0,0]) {
+                                        translate([9,0,0]) {
                                             gear (circular_pitch=gearPitch,
                                                 gear_thickness = wallThickness,
                                                 rim_thickness = wallThickness,
@@ -537,6 +537,11 @@ module armPart(parts, showUpper, showLower, i, armRadius, gapWidth) {
     }
 }
 
+//https://www.amazon.com/gp/product/B075CM3FG3?pf_rd_p=1581d9f4-062f-453c-b69e-0f3e00ba2652&pf_rd_r=AEWRMF4T87F4RZP6399V
+module smallBallBearing() {
+    tube(2,5,2.5);
+}
+
 module arm(armRadius, gapWidth) {
     difference() {
         difference() {
@@ -591,38 +596,6 @@ module pieSlice(r, start_angle, end_angle, height=10) {
     }
 }
 
-//testArmGradleConnector();
-module testArmGradleConnector() {
-    gapWidth = rodRadius + tolerance;
-    armRadius = 170;
-    difference() {
-        translate([0,0,wallThickness/2]) {
-            cube([110,wallThickness*2, wallThickness], center = true);
-            translate([0,-22,0]) {
-                cube([(22+m2NutRadius+wallThickness)*2,wallThickness*2,wallThickness], center = true);
-                translate([0,0,wallThickness])
-                cube([30,wallThickness*2,wallThickness], center = true);
-            }
-            translate([0,-11,0])
-            cube([wallThickness,22,wallThickness],center = true);
-        }
-        translate([22,-22,0])
-        screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
-        translate([baseRadius/2 + m2NutRadius,0,-0.01])
-        screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
-        translate([baseRadius/2 + m2NutRadius + (wallThickness*2+m2NutRadius*4),0,-0.01])
-        screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
-        mirror([1,0,0]) {
-            translate([22,-22,0])
-            screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
-            translate([baseRadius/2 + m2NutRadius,0,-0.01])
-            screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
-            translate([baseRadius/2 + m2NutRadius + (wallThickness*2+m2NutRadius*4),0,-0.01])
-            screw(m2Radius, m2Height, m2HeadRadius, m2HeadHeight);
-        }
-    }
-}
-
 module screw(radius, height, headRadius, headHeight) {
     cylinder(r = headRadius, h = headHeight);
     translate([0,0,headHeight-0.01])
@@ -664,7 +637,7 @@ module springHelper(springRadius, springHeight) {
     }
 }
 
-module armGradle(gapWidth, armRadius, printSprings = false) {
+module armGradle(gapWidth, armRadius, printSprings = false, printBearings = false) {
     springRadius = 30;
     springHeight = 5;
     union() {
@@ -676,7 +649,6 @@ module armGradle(gapWidth, armRadius, printSprings = false) {
                             rotate([90, 0, 0]) {
                                 union() {
                                     tube(armRadius - (wallThickness + tolerance*4), armRadius * 2, wallThickness);
-                                    tube(armRadius - (wallThickness + tolerance * 5) - wallThickness, armRadius - (wallThickness + tolerance*4)+0.01, wallThickness + gradleGrooveDepth + tolerance);
                                 }
                             }
                         }
@@ -707,6 +679,25 @@ module armGradle(gapWidth, armRadius, printSprings = false) {
                 cylinder(r = baseRadius - wallThickness - tolerance, h = segmentHeight);
             }
             cube([armWidth,baseRadius,segmentHeight], center = true);
+        }
+
+        //Ball bearings
+        for(i = [0:1:1]){
+            mirror([i,0,0]) {
+                //2.5 is thickness of bearing and radius of it
+                translate([0, gapWidth + (armWidth/2-gapWidth) + tolerance, armRadius + wallThickness + armThickness * 2 + tolerance + 2.5])
+                rotate([90,0,0])
+                rotate([0,0,-8])
+                translate([0,-armRadius,0])
+                union() {
+                    if(printBearings)
+                        translate([0,0,tolerance])
+                        smallBallBearing();
+                    tube(2,3,tolerance);
+                    mirror([0,0,1])
+                    nutHole(m2NutRadius, m2NutHeight, m2ScrewRadius);
+                }
+            }
         }
         if(printSprings) {
             translate([0, gapWidth + (armWidth/2-gapWidth) + wallThickness + tolerance, armRadius + wallThickness + 3]){
