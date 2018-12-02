@@ -268,7 +268,7 @@ module discSegment (armRadius, printGradle = true, printArduino = false, printTo
                 //Arm gradle
                 if(printGradle) {
                     translate([0,0,wallThickness*2]) {
-                        !armGradle(gapWidth, armRadius);
+                        armGradle(gapWidth, armRadius);
                         mirror([0,1,0])
                         armGradle(gapWidth, armRadius);
                         translate([0,-(armWidth/2) - 26 - wallThickness*5, wallThickness + 16 + tolerance / 2])
@@ -637,7 +637,7 @@ module springHelper(springRadius, springHeight) {
     }
 }
 
-module armGradle(gapWidth, armRadius, printSprings = false, printBearings = false) {
+module armGradle(gapWidth, armRadius, printSprings = true, printBearings = true) {
     springRadius = 30;
     springHeight = 5;
     union() {
