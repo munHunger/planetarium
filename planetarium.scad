@@ -268,7 +268,7 @@ module discSegment (armRadius, printGradle = true, printArduino = false, printTo
                 //Arm gradle
                 if(printGradle) {
                     translate([0,0,wallThickness*2]) {
-                        armGradle(gapWidth, armRadius);
+                        !armGradle(gapWidth, armRadius);
                         mirror([0,1,0])
                         armGradle(gapWidth, armRadius);
                         translate([0,-(armWidth/2) - 26 - wallThickness*5, wallThickness + 16 + tolerance / 2])
@@ -539,7 +539,7 @@ module armPart(parts, showUpper, showLower, i, armRadius, gapWidth) {
 
 //https://www.amazon.com/gp/product/B075CM3FG3?pf_rd_p=1581d9f4-062f-453c-b69e-0f3e00ba2652&pf_rd_r=AEWRMF4T87F4RZP6399V
 module smallBallBearing() {
-    tube(2,5,2.5);
+    tube(2,4,2.5);
 }
 
 module arm(armRadius, gapWidth) {
@@ -637,7 +637,7 @@ module springHelper(springRadius, springHeight) {
     }
 }
 
-module armGradle(gapWidth, armRadius, printSprings = true, printBearings = true) {
+module armGradle(gapWidth, armRadius, printSprings = false, printBearings = false) {
     springRadius = 30;
     springHeight = 5;
     union() {
@@ -693,9 +693,9 @@ module armGradle(gapWidth, armRadius, printSprings = true, printBearings = true)
                     if(printBearings)
                         translate([0,0,tolerance])
                         smallBallBearing();
-                    tube(2,3,tolerance);
+                    tube(1,2,tolerance);
                     mirror([0,0,1])
-                    nutHole(m2NutRadius, m2NutHeight, m2ScrewRadius);
+                    nutHole(m2NutRadius, m2NutHeight, m2ScrewRadius, slim = true);
                 }
             }
         }
@@ -720,11 +720,22 @@ module armGradle(gapWidth, armRadius, printSprings = true, printBearings = true)
     }
 }
 
-module nutHole(nutRadius, height, screwRadius) {
+module nutHole(nutRadius, height, screwRadius, slim = false) {
     difference() {
-        cylinder(r = nutRadius + wallThickness, h = height + wallThickness);
-        translate([0,0,wallThickness+0.01])
-        cylinder(r = nutRadius, h = height, $fn = 6);
+        if(!slim) {
+            cylinder(r = nutRadius + wallThickness, h = height + wallThickness);
+        }
+        if(slim) {
+            cylinder(r = nutRadius + wallThickness, h = wallThickness);
+        }
+        if(!slim) {
+            translate([0,0,wallThickness+0.01])
+            cylinder(r = nutRadius, h = height, $fn = 6);
+        }
+        if(slim) {
+            translate([0,0,wallThickness+0.01-height])
+            cylinder(r = nutRadius, h = height, $fn = 6);
+        }
         translate([0,0,-0.01])
         cylinder(r = screwRadius, h = height + wallThickness);
     }
