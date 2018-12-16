@@ -685,7 +685,7 @@ module armGradle(gapWidth, armRadius, printSprings = false, printBearings = fals
         for(i = [0:1:1]){
             mirror([i,0,0]) {
                 //2.5 is thickness of bearing and radius of it
-                translate([0, gapWidth + (armWidth/2-gapWidth) + tolerance, armRadius + wallThickness + armThickness * 2 + tolerance + 2.5])
+                translate([0, gapWidth + (armWidth/2-gapWidth) + tolerance, armRadius + wallThickness + armThickness * 2 + tolerance])
                 rotate([90,0,0])
                 rotate([0,0,-8])
                 translate([0,-armRadius,0])
