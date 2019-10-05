@@ -1,5 +1,5 @@
 include <gear.scad>;
-$fn = 256;
+$fn = 16;
 
 tolerance = 0.5;
 //radius
@@ -38,7 +38,7 @@ topSegmentHeight = 10;
 grooveDepth = 0.5;
 grooveHeight = 3;
 
-discSegment(170);
+discSegment(170, printArm = true);
 // translate([0,0,segmentHeight])
 // internal_gear (circular_pitch = gearPitch, gear_thickness = wallThickness, outer_radius = baseRadius - wallThickness+1);
 /*
@@ -268,7 +268,7 @@ module discSegment (armRadius, printGradle = true, printArduino = false, printTo
                 //Arm gradle
                 if(printGradle) {
                     translate([0,0,wallThickness*2]) {
-                        !armGradle(gapWidth, armRadius);
+                        armGradle(gapWidth, armRadius);
                         mirror([0,1,0])
                         armGradle(gapWidth, armRadius);
                         translate([0,-(armWidth/2) - 26 - wallThickness*5, wallThickness + 16 + tolerance / 2])
@@ -542,6 +542,7 @@ module smallBallBearing() {
     tube(2,4,2.5);
 }
 
+!arm(170, 4);
 module arm(armRadius, gapWidth) {
     difference() {
         difference() {
