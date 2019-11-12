@@ -72,7 +72,10 @@ module arm(armRadius, cache = true) {
     }
 
     if(cache) {
-        import("arm/arm170.stl");
+        if(armRadius == 170)
+            import("arm/arm170.stl");
+        if(armRadius == 110)
+            import("arm/arm110.stl");
     }
     else {
         $fn = 256;

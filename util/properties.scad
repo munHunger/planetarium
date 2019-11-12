@@ -10,3 +10,6 @@ wallThickness = 2;
 ballbearingInner = 2;
 ballbearingOuter = 4;
 ballbearingHeight = 2.5;
+
+discRadiusInner = 60;
+discRadiusOuter = 63;
