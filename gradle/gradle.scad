@@ -12,14 +12,17 @@ module part(armRadius) {
         rotate([-90,0,0]) {
             for (i=[0:1]) {
                 mirror([i,0,0])
-                rotate([0,0,10])
-                translate([0,armRadius + ballbearingOuter,0])
+                rotate([0,0,15])
+                translate([0,armRadius + ballbearingOuter + wallThickness + 2 * tolerance,0])
                 union() {
                     if(!alfa) {
-                        tube(ballbearingInner, ballbearingOuter, ballbearingHeight);
+                        // tube(ballbearingInner, ballbearingOuter, ballbearingHeight);
                     }
                     translate([0,0,ballbearingHeight])
                     m2x4Insert(alfa = alfa);
+                    translate([0,0,2])
+                    mirror([0,0,1])
+                    tension();
                 }
             }
         }
@@ -34,6 +37,24 @@ module part(armRadius) {
         }
     }
 
+
+    for (i=[0:1]) {
+        mirror([i,0,0])
+        translate([35,0.5,0])
+        union() {
+            translate([-2.5,-2.5,0])
+            cube(size=[5, 5, thickness/2], center=false);
+            translate([0,0,thickness/2]) {
+                intersection() {
+                    spring(alfa = true);
+                    translate([-2.5,-2.5,0])
+                    cube(size=[5, 5, 2], center=false);
+                }
+                // %spring(alfa = false);
+            }
+        }
+    }
+
     translate([0,0,gradleOffset]) {
         bearing();
         connector();
@@ -45,6 +66,55 @@ module part(armRadius) {
             bearing(alfa = true);
             connector(alfa = true);
         }
+    }
+}
+
+module tension() {
+    tube(ballbearingOuter, ballbearingOuter + wallThickness, ballbearingHeight);
+
+    difference() {
+        hull() {
+            cylinder(r = ballbearingOuter + wallThickness, h = ballbearingHeight);
+            rotate([0,0,-25])
+            translate([10,0,0])
+            cylinder(r = ballbearingInner, h = ballbearingHeight);
+        }
+        translate([0,0,-1])
+        cylinder(r = ballbearingOuter, h = ballbearingHeight + 2);
+    }
+
+    hull() {
+        rotate([0,0,-25])
+        translate([10,0,0])
+        cylinder(r = ballbearingInner, h = ballbearingHeight);
+        rotate([0,0,-11.5])
+        translate([20,0,0])
+        cylinder(r = ballbearingInner, h = ballbearingHeight);
+    }
+
+    rotate([0,0,-11.5])
+    translate([20,0,0])
+    union() {
+        cylinder(r = ballbearingInner, h = ballbearingHeight * 2);
+        // translate([0,0,ballbearingHeight])
+        // %tube(ballbearingInner, ballbearingOuter, ballbearingHeight);
+    }
+
+    rotate([0,0,-25])
+    translate([10,0,1.5])
+    rotate([-90,0,0])
+    intersection() {
+        spring(alfa = true);
+        translate([-2.5,-2.5,0])
+        cube([5,5,3]);
+    }
+}
+
+module testRig() {
+    intersection() {
+        part(170);
+        translate([23,-1,0])
+        cube(size=[40, 10, 20], center=false);
     }
 }
 

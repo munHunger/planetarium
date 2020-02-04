@@ -7,8 +7,8 @@ gradleGrooveDepth = 7;
 
 wallThickness = 2;
 
-ballbearingInner = 2;
-ballbearingOuter = 4;
+ballbearingInner = 1.5;
+ballbearingOuter = 3;
 ballbearingHeight = 2.5;
 
 discRadiusInner = 60;

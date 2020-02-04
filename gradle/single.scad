@@ -1,3 +1,4 @@
 include <gradle.scad>
-
-gradle(170);
+$fn = 128;
+// gradle(170);
+testRig();

@@ -145,3 +145,11 @@ module nema11LyingMount(height = 15) {
         cylinder(r = 13, h = wallThickness + 20);
     }
 }
+
+module spring(alfa = false) {
+    if(!alfa)
+        tube(0.75, 1.5, 10);
+    else
+        translate([0,0,-0.1])
+        cylinder(r = 0.75, h = 10.2);
+}
