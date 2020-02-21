@@ -29,6 +29,14 @@ module tube(innerRadius, outerRadius, height) {
     }
 }
 
+module cone(lowerRadius, upperRadius, height) {
+    hull() {
+        cylinder(r = lowerRadius, h = 0.0001);
+        translate([0,0,height-0.0001])
+        cylinder(r = upperRadius, h = 0.0001);
+    }
+}
+
 module filet(r = 10, h = 1, alfa = false) {
     if(!alfa) {
         intersection() {

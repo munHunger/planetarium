@@ -12,12 +12,12 @@ module arm(armRadius, cache = true) {
                 intersection() {
                     internal_gear (circular_pitch = gearPitch, gear_thickness = brassThickness, outer_radius = armRadius - armThickness + 2);
                     rotate([0,0,-90-(grooveAngle/2)])
-                    pieSlice(armRadius+5, 0, grooveAngle, brassThickness);
+                    pieSlice(armRadius+8, 0, grooveAngle, brassThickness);
                 }
                 intersection() {
-                    tube(armRadius - armThickness, armRadius, brassThickness);
+                    tube(armRadius - armThickness, armRadius + 2, brassThickness);
                     rotate([0,0,180])
-                    pieSlice(armRadius+5, 0, 180, brassThickness);
+                    pieSlice(armRadius+8, 0, 180, brassThickness);
                 }
             }
             translate([0,0,-1])
@@ -65,6 +65,37 @@ module arm(armRadius, cache = true) {
             }
         }
     }
+    module print() {
+        height = gradleGrooveDepth;
+        thickness = 3;
+        difference() {
+            union() {
+                // base
+                intersection() {
+                    tube(armRadius - armThickness, armRadius, height);
+                    rotate([0,0,180])
+                    pieSlice(armRadius+5, 0, 11, height);
+                }
+                // Enforce end
+                union() {
+                    rotate([0,0,180]) {
+                        filetSection(armRadius - armThickness - thickness - 0.5, armRadius - armThickness, height, 10, inner = true);
+                        filetSection(armRadius - 0.5, armRadius + thickness, height, 10, inner = false);
+                    }
+                }
+            }
+
+            translate([0,0,-1])
+            for (x=[0:1]) {
+                mirror([x,0,0])
+                for (i=[0:1]) {
+                    rotate([0,0,-2-i*5])
+                    translate([armRadius - armThickness / 2,0,0])
+                    cylinder(r=2, h=height + 2); //4mm threaded insert for m2 screw
+                }
+            }
+        }
+    }
     module part() {
         brass();
         translate([0,0,1.5])
@@ -79,13 +110,16 @@ module arm(armRadius, cache = true) {
     }
     else {
         $fn = 256;
-        $fn = 64;
+        // $fn = 64;
 
         translate([0,0,-(4.5*2 + gradleGrooveDepth) / 2]) {
             part();
             translate([0,0,4.5*2 + gradleGrooveDepth])
             mirror([0,0,1])
             part();
+
+            // translate([0,0,4.5])
+            // print();
         }
     }
 }
