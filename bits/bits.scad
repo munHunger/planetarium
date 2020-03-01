@@ -87,6 +87,32 @@ module stepper() {
     }
 }
 
+// https://www.amazon.com/Motor-1-8deg-Bipolar-35x35x26mm-4-wire/dp/B00PNEPQ8E/ref=sr_1_1?crid=1V94EJOTKYCLG&keywords=nema14+stepper&qid=1582572173&sprefix=nema14%2Caps%2C241&sr=8-1
+module nema14(alfa = false) {
+    height = 26;
+    module screws() {
+        for(i=[0:3]) {
+            rotate([0,0,90*i])
+            translate([13,13, height])
+            cylinder(r = 1.5, h = 5, center = true); //m3 screw
+        }
+    }
+    if(alfa) {
+        screws();
+    }
+    else {
+        difference() {
+            union() {
+                translate([0,0,height / 2])
+                cube([35.2, 35.2, height], center = true);
+                translate([0,0,height])
+                cylinder(r = 2.5, h = 19.8);
+            }
+            screws();
+        }
+    }
+}
+
 module nema11(alfa = false) {
     height = 32;
     module screws() {
@@ -139,6 +165,40 @@ module nema11LyingMount(height = 15) {
             cube([15+height + wallThickness, 28.2, wallThickness], center = false);
             translate([height,-28.2 / 2,0])
             cube([wallThickness, 28.2,32]);
+        }
+        nema11(alfa = true);
+        translate([0,0,20])
+        cylinder(r = 13, h = wallThickness + 20);
+    }
+}
+
+module nema14StandingMount() {
+    difference() {
+        union() {
+            translate([0,0,32 + wallThickness / 2])
+            cube([35.2 + wallThickness * 2, 35.2, wallThickness], center = true);
+            for(i=[0:1]) {
+                mirror([i,0,0]) {
+                    translate([35.2 / 2,-35.2 / 2,0])
+                    cube([wallThickness, 35.2,32]);
+                    translate([35.2 / 2,-35.2 / 2,0])
+                    cube([10,35.2,wallThickness]);
+                }
+            }
+        }
+        nema11(alfa = true);
+        translate([0,0,20])
+        cylinder(r = 13, h = wallThickness + 20);
+    }
+}
+
+module nema14LyingMount(height = 15) {
+    difference() {
+        union() {
+            translate([-15,-35.2/2,32])
+            cube([15+height + wallThickness, 35.2, wallThickness], center = false);
+            translate([height,-35.2 / 2,0])
+            cube([wallThickness, 35.2,32]);
         }
         nema11(alfa = true);
         translate([0,0,20])

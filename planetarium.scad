@@ -35,15 +35,15 @@ module disc2(armRadius) {
         gradle(armRadius);
 
         translate([0,35,0]) {
-            nema11StandingMount();
-            nema11();
+            nema14StandingMount();
+            nema14();
         }
 
         translate([0,-50,20 + wallThickness])
         rotate([0,90,90])
         union() {
-            nema11LyingMount(20);
-            nema11();
+            nema14LyingMount(10);
+            nema14();
         }
 
         tube(discRadiusInner, discRadiusOuter, 3);
